@@ -92,6 +92,7 @@ void POP(uint8_t opcode);
 void RRC(uint8_t opcode);
 void RLC(uint8_t opcode);
 void RL(uint8_t opcode);
+void RR(uint8_t opcode);
 void RES(uint8_t opcode, uint8_t bit_n);
 void SET(uint8_t opcode, uint8_t bit_n);
 void BIT(uint8_t opcode, int bit_n);

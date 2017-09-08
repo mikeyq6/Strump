@@ -654,6 +654,7 @@ void RunCBInstruction(uint8_t opcode) {
 		case RRC_HL:
 		case RRC_A:
 			RRC(opcode); break;
+		case RL_A:
 		case RL_B:
 		case RL_C:
 		case RL_D:
@@ -662,6 +663,15 @@ void RunCBInstruction(uint8_t opcode) {
 		case RL_L:
 		case RL_HL:
 			RL(opcode); break;
+		case RR_A:
+		case RR_B:
+		case RR_C:
+		case RR_D:
+		case RR_E:
+		case RR_H:
+		case RR_L:
+		case RR_HL:
+			RR(opcode); break;
 	}
 }
 
@@ -1617,6 +1627,43 @@ void RRC(uint8_t opcode) {
 		case RRC_HL:
 			val = ReadMem(HL.hl);
 			outbit &= val; val >>= 1; outbit <<= 7; val += outbit;
+			WriteMem(HL.hl, val); break;
+	}
+	
+	if(outbit) {
+		setFlag(C);
+	}
+	if(val == 0) {
+		setFlag(Z);
+	}
+}
+void RR(uint8_t opcode) {
+	uint8_t oldC = getFlag(C);
+	resetFlag(Z);
+	resetFlag(N);
+	resetFlag(H);
+	resetFlag(C);
+	uint8_t outbit = 1;
+	uint8_t val = 0;
+	
+	switch(opcode) {
+		case RR_A:
+			outbit &= AF.a; AF.a >>= 1; outbit <<= 7; AF.a += oldC; val = AF.a; break;
+		case RR_B:
+			outbit &= BC.b; BC.b >>= 1; outbit <<= 7; BC.b += oldC; val = BC.b; break;
+		case RR_C:
+			outbit &= BC.c; BC.c >>= 1; outbit <<= 7; BC.c += oldC; val = BC.c; break;
+		case RR_D:
+			outbit &= DE.d; DE.d >>= 1; outbit <<= 7; DE.d += oldC; val = DE.d; break;
+		case RR_E:
+			outbit &= DE.e; DE.e >>= 1; outbit <<= 7; DE.e += oldC; val = DE.e; break;
+		case RR_H:
+			outbit &= HL.h; HL.h >>= 1; outbit <<= 7; HL.h += oldC; val = HL.h; break;
+		case RR_L:
+			outbit &= HL.l; HL.l >>= 1; outbit <<= 7; HL.l += oldC; val = HL.l; break;
+		case RR_HL:
+			val = ReadMem(HL.hl);
+			outbit &= val; val >>= 1; outbit <<= 7; val += oldC;
 			WriteMem(HL.hl, val); break;
 	}
 	
@@ -2894,6 +2941,8 @@ const char* CBCodeToString(uint8_t opcode) {
 			name = "RRC (HL)"; break;
 		case RRC_A:
 			name = "RRC A"; break;
+		case RL_A:
+			name = "RL A"; break;
 		case RL_B:
 			name = "RL B"; break;
 		case RL_C:
@@ -2908,6 +2957,22 @@ const char* CBCodeToString(uint8_t opcode) {
 			name = "RL L"; break;
 		case RL_HL:
 			name = "RL (HL)"; break;
+		case RR_A:
+			name = "RR A"; break;
+		case RR_B:
+			name = "RR B"; break;
+		case RR_C:
+			name = "RR C"; break;
+		case RR_D:
+			name = "RR D"; break;
+		case RR_E:
+			name = "RR E"; break;
+		case RR_H:
+			name = "RR H"; break;
+		case RR_L:
+			name = "RR L"; break;
+		case RR_HL:
+			name = "RR (HL)"; break;
 		default:
 			name = "Undefined"; break;
 
