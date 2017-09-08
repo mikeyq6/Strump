@@ -32,37 +32,37 @@ void setDefaults() {
 	DE.de = 0x00d8;
 	HL.hl = 0x014d;
 	SP = 0xfffe;
-	WriteMem(0xff05, 0x00); // TIMA
-	WriteMem(0xff06, 0x00); // TMA
-	WriteMem(0xff07, 0x00); // TAC
-	WriteMem(0xff10, 0x80); // NR10
-	WriteMem(0xff11, 0xbf); // NR11
-	WriteMem(0xff12, 0xf3); // NR12
-	WriteMem(0xff14, 0xbf); // NR14
-	WriteMem(0xff16, 0x3f); // NR21
-	WriteMem(0xff17, 0x00); // NR22
-	WriteMem(0xff19, 0xbf); // NR24
-	WriteMem(0xff1a, 0x7f); // NR30
-	WriteMem(0xff1b, 0xff); // NR31
-	WriteMem(0xff1c, 0x9f); // NR32
-	WriteMem(0xff1e, 0xbf); // NR33
-	WriteMem(0xff20, 0xff); // NR41
-	WriteMem(0xff21, 0x00); // NR42
-	WriteMem(0xff22, 0x00); // NR43
-	WriteMem(0xff23, 0xbf); // NR30
-	WriteMem(0xff24, 0x77); // NR50
-	WriteMem(0xff25, 0xf3); // NR51
-	WriteMem(0xff26, 0xf1); // NR52 GB
-	WriteMem(0xff40, 0x91); // LCDC
-	WriteMem(0xff42, 0x00); // SCY
-	WriteMem(0xff43, 0x00); // SCY
-	WriteMem(0xff45, 0x00); // LYC
-	WriteMem(0xff47, 0xfc); // BGP
-	WriteMem(0xff48, 0xff); // OBP0
-	WriteMem(0xff49, 0xff); // OBP1
-	WriteMem(0xff4a, 0x00); // WY
-	WriteMem(0xff4b, 0x00); // WX
-	WriteMem(0xffff, 0x00); // IE
+	WriteMem(TIMA, 0x00); // TIMA
+	WriteMem(TMA, 0x00); // TMA
+	WriteMem(TAC, 0x00); // TAC
+	WriteMem(NR10, 0x80); // NR10
+	WriteMem(NR11, 0xbf); // NR11
+	WriteMem(NR12, 0xf3); // NR12
+	WriteMem(NR14, 0xbf); // NR14
+	WriteMem(NR21, 0x3f); // NR21
+	WriteMem(NR22, 0x00); // NR22
+	WriteMem(NR24, 0xbf); // NR24
+	WriteMem(NR30, 0x7f); // NR30
+	WriteMem(NR31, 0xff); // NR31
+	WriteMem(NR32, 0x9f); // NR32
+	WriteMem(NR33, 0xbf); // NR33
+	WriteMem(NR41, 0xff); // NR41
+	WriteMem(NR42, 0x00); // NR42
+	WriteMem(NR43, 0x00); // NR43
+	WriteMem(NR44, 0xbf); // NR44
+	WriteMem(NR50, 0x77); // NR50
+	WriteMem(NR51, 0xf3); // NR51
+	WriteMem(NR52, 0xf1); // NR52 GB
+	WriteMem(LCDC, 0x91); // LCDC
+	WriteMem(SCY, 0x00); // SCY
+	WriteMem(SCX, 0x00); // SCX
+	WriteMem(LYC, 0x00); // LYC
+	WriteMem(BGP, 0xfc); // BGP
+	WriteMem(OBP0, 0xff); // OBP0
+	WriteMem(OBP1, 0xff); // OBP1
+	WriteMem(WY, 0x00); // WY
+	WriteMem(WX, 0x00); // WX
+	WriteMem(IE, 0x00); // IE
 }
 
 void Start() {
@@ -385,6 +385,12 @@ void Run(uint8_t opcode, uint8_t param1, uint8_t param2) {
 			RLCA_(); break;
 		case RLA:
 			RLA_(); break;
+		case SCF:
+			setFlag(C); resetFlag(N); resetFlag(H); break;
+		case CCF:
+			if(getFlag(C)) { resetFlag(C); } else { setFlag(C); }; resetFlag(N); resetFlag(H); break;
+		case CPL:
+			AF.a ^= 0xff; setFlag(N); setFlag(H); break;
 		default:
 			break;
 			//printf("instruction [%x] [%x] [%x] not implemented\n", opcode, param1, param2);
@@ -2405,6 +2411,12 @@ const char* CodeToString(uint8_t opcode) {
 			name = "RLCA"; break;
 		case RLA:
 			name = "RLA"; break;
+		case SCF:
+			name = "SCF"; break;
+		case CCF:
+			name = "CCF"; break;
+		case CPL:
+			name = "CPL"; break;
 		default:
 			name = "Undefined"; break;
 	}
