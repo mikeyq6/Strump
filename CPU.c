@@ -672,6 +672,33 @@ void RunCBInstruction(uint8_t opcode) {
 		case RR_L:
 		case RR_HL:
 			RR(opcode); break;
+		case SRA_A:
+		case SRA_B:
+		case SRA_C:
+		case SRA_D:
+		case SRA_E:
+		case SRA_L:
+		case SRA_H:
+		case SRA_HL:
+			SRA(opcode);
+		case SLA_A:
+		case SLA_B:
+		case SLA_C:
+		case SLA_D:
+		case SLA_E:
+		case SLA_L:
+		case SLA_H:
+		case SLA_HL:
+			SLA(opcode);
+		case SRL_A:
+		case SRL_B:
+		case SRL_C:
+		case SRL_D:
+		case SRL_E:
+		case SRL_L:
+		case SRL_H:
+		case SRL_HL:
+			SRL(opcode);
 	}
 }
 
@@ -1670,6 +1697,100 @@ void RR(uint8_t opcode) {
 	if(outbit) {
 		setFlag(C);
 	}
+	if(val == 0) {
+		setFlag(Z);
+	}
+}
+void SRL(uint8_t opcode) {
+	resetFlag(N);
+	resetFlag(H);
+	resetFlag(C);
+	resetFlag(Z);
+	uint8_t val = 0;
+	
+	switch(opcode) {
+		case SRL_A:
+			if(AF.a & 1) { setFlag(C); }; AF.a >>= 1; val = AF.a; break;
+		case SRL_B:
+			if(BC.b & 1) { setFlag(C); }; BC.b >>= 1; val = BC.b; break;
+		case SRL_C:
+			if(BC.c & 1) { setFlag(C); }; BC.c >>= 1; val = BC.c; break;
+		case SRL_D:
+			if(DE.d & 1) { setFlag(C); }; DE.d >>= 1; val = DE.d; break;
+		case SRL_E:
+			if(DE.e & 1) { setFlag(C); }; DE.e >>= 1; val = DE.e; break;
+		case SRL_H:
+			if(HL.h & 1) { setFlag(C); }; HL.h >>= 1; val = HL.h; break;
+		case SRL_L:
+			if(HL.l & 1) { setFlag(C); }; HL.l >>= 1; val = HL.l; break;
+		case SRL_HL:
+			val = ReadMem(HL.hl); if(val & 1) { setFlag(C); }; val >>= 1; WriteMem(HL.hl, val); break;
+	}
+	
+	if(val == 0) {
+		setFlag(Z);
+	}
+	
+}
+void SRA(uint8_t opcode) {
+	resetFlag(N);
+	resetFlag(H);
+	resetFlag(C);
+	resetFlag(Z);
+	uint8_t val = 0;
+	uint8_t bit7 = 0;
+	
+	switch(opcode) {
+		case SRA_A:
+			if(AF.a & 1) { setFlag(C); }; bit7 = (AF.a & 0x80); AF.a &= 0x7f; AF.a >>= 1; AF.a ^= bit7; val = AF.a; break;
+		case SRA_B:
+			if(BC.b & 1) { setFlag(C); }; bit7 = (BC.b & 0x80); BC.b &= 0x7f; BC.b >>= 1; BC.b ^= bit7; val = BC.b; break;
+		case SRA_C:
+			if(BC.c & 1) { setFlag(C); }; bit7 = (BC.c & 0x80); BC.c &= 0x7f; BC.c >>= 1; BC.c ^= bit7; val = BC.c; break;
+		case SRA_D:
+			if(DE.d & 1) { setFlag(C); }; bit7 = (DE.d & 0x80); DE.d &= 0x7f; DE.d >>= 1; DE.d ^= bit7; val = DE.d; break;
+		case SRA_E:
+			if(DE.e & 1) { setFlag(C); }; bit7 = (DE.e & 0x80); DE.e &= 0x7f; DE.e >>= 1; DE.e ^= bit7; val = DE.e; break;
+		case SRA_H:
+			if(HL.h & 1) { setFlag(C); }; bit7 = (HL.h & 0x80); HL.h &= 0x7f; HL.h >>= 1; HL.h ^= bit7; val = HL.h; break;
+		case SRA_L:
+			if(HL.l & 1) { setFlag(C); }; bit7 = (HL.l & 0x80); HL.l &= 0x7f; HL.l >>= 1; HL.l ^= bit7; val = HL.l; break;
+		case SRA_HL:
+			val = ReadMem(HL.hl); if(val & 1) { setFlag(C); }; bit7 = (val & 0x80); val &= 0x7f; val >>= 1; val ^= bit7; WriteMem(HL.hl, val); break;
+		default: 
+			return;
+	}
+	
+	if(val == 0) {
+		setFlag(Z);
+	}
+}
+void SLA(uint8_t opcode) {
+	resetFlag(N);
+	resetFlag(H);
+	resetFlag(C);
+	resetFlag(Z);
+	uint8_t val = 0;
+	
+	switch(opcode) {
+		case SLA_A:
+			if(AF.a & 0x80) { setFlag(C); }; AF.a <<= 1; val = AF.a; break;
+		case SLA_B:
+			if(BC.b & 0x80) { setFlag(C); }; BC.b <<= 1; val = BC.b; break;
+		case SLA_C:
+			if(BC.c & 0x80) { setFlag(C); }; BC.c <<= 1; val = BC.c; break;
+		case SLA_D:
+			if(DE.d & 0x80) { setFlag(C); }; DE.d <<= 1; val = DE.d; break;
+		case SLA_E:
+			if(DE.e & 0x80) { setFlag(C); }; DE.e <<= 1; val = DE.e; break;
+		case SLA_H:
+			if(HL.h & 0x80) { setFlag(C); }; HL.h <<= 1; val = HL.h; break;
+		case SLA_L:
+			if(HL.l & 0x80) { setFlag(C); }; HL.l <<= 1; val = HL.l; break;
+		case SLA_HL:
+			val = ReadMem(HL.hl); if(val & 0x80) { setFlag(C); }; val <<= 1; WriteMem(HL.hl, val); break;
+	}
+	
 	if(val == 0) {
 		setFlag(Z);
 	}
@@ -2973,6 +3094,54 @@ const char* CBCodeToString(uint8_t opcode) {
 			name = "RR L"; break;
 		case RR_HL:
 			name = "RR (HL)"; break;
+		case SRA_A:
+			name = "SRA A"; break;
+		case SRA_B:
+			name = "SRA B"; break;
+		case SRA_C:
+			name = "SRA C"; break;
+		case SRA_D:
+			name = "SRA D"; break;
+		case SRA_E:
+			name = "SRA E"; break;
+		case SRA_L:
+			name = "SRA H"; break;
+		case SRA_H:
+			name = "SRA L"; break;
+		case SRA_HL:
+			name = "SRA (HL)"; break;
+		case SLA_A:
+			name = "SLA A"; break;
+		case SLA_B:
+			name = "SLA B"; break;
+		case SLA_C:
+			name = "SLA C"; break;
+		case SLA_D:
+			name = "SLA D"; break;
+		case SLA_E:
+			name = "SLA E"; break;
+		case SLA_L:
+			name = "SLA H"; break;
+		case SLA_H:
+			name = "SLA L"; break;
+		case SLA_HL:
+			name = "SLA (HL)"; break;
+		case SRL_A:
+			name = "SRL A"; break;
+		case SRL_B:
+			name = "SRL B"; break;
+		case SRL_C:
+			name = "SRL C"; break;
+		case SRL_D:
+			name = "SRL D"; break;
+		case SRL_E:
+			name = "SRL E"; break;
+		case SRL_L:
+			name = "SRL H"; break;
+		case SRL_H:
+			name = "SRL L"; break;
+		case SRL_HL:
+			name = "SRL (HL)"; break;
 		default:
 			name = "Undefined"; break;
 
