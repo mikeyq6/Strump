@@ -2,6 +2,8 @@
 #include "CPU.h"
 #include "opcodes.h"
 
+void clearFlags();
+
  // Testing
  void TestInstructions() {
 	AF.a = 1;
@@ -103,10 +105,11 @@
 	HL.h = 0x9a;
 	resetFlag(C);
 	RL(RL_H);
-	printf("HL.h = 0x%x\n", HL.h);
+	//printf("HL.h = 0x%x\n", HL.h);
 	assert(HL.h == 0x34);
 	assert(getFlag(C) == 1);
 	
+	clearFlags();
 	AF.a = 0x25;
 	DE.e = 0x17;
 	ADD(ADD_A_E, 0);
@@ -116,6 +119,7 @@
 	DAA_();
 	assert(AF.a == 0x42);
 	
+	clearFlags();
 	AF.a = 0x72;
 	BC.c = 0x15;
 	SUB(SUB_C, 0);
@@ -124,4 +128,11 @@
 	assert(getFlag(C) == 0);
 	DAA_();
 	assert(AF.a == 0x57);
+ }
+ 
+ void clearFlags() {
+	 resetFlag(Z);
+	 resetFlag(N);
+	 resetFlag(C);
+	 resetFlag(H);
  }

@@ -8,7 +8,7 @@
 	 initCPU();
 	Start();
 	 
-	printf("a=%u, f=%u, af=%u\n", AF.a, AF.f, AF.af);
+	//printf("a=%u, f=%u, af=%u\n", AF.a, AF.f, AF.af);
 	
 	 _getch();
 	 

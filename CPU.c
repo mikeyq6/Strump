@@ -1639,6 +1639,7 @@ void SUB(uint8_t opcode, uint8_t param) {
 	resetFlag(C);
 	
 	uint8_t val = 0;
+	uint8_t oldA = AF.a;
 	
 	switch(opcode) {
 		case SUB_A:
@@ -1664,10 +1665,11 @@ void SUB(uint8_t opcode, uint8_t param) {
 	if(AF.a == 0) { setFlag(Z); }
 	
 	// Half carry and full carry
-	if((AF.a & 0xf) - (val & 0xf) < 0) {
+	//printf("AF.a = 0x%x, val = 0x%x, (AF.a & 0xf) - (val & 0xf) = 0x%x\n", AF.a, val, (AF.a & 0xf) - (val & 0xf));
+	if((oldA & 0xf) - (val & 0xf) < 0) {
 		setFlag(H);
 	}
-	if(((AF.a >> 4) & 0xf) - ((val >> 4) & 0xf) < 0) {
+	if(((oldA >> 4) & 0xf) - ((val >> 4) & 0xf) < 0) {
 		setFlag(C);
 	}
 }
