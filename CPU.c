@@ -3236,7 +3236,7 @@ const char* CBCodeToString(uint8_t opcode) {
 
 #ifdef STEPTHROUGH
 void DisplayState() {
-	printf("Registers:\nAF: %02x%02x\tBC: %02x%02x\nDE: %02x%02x\tHL: %02x%02x\nSP: %04x\tPC: %04x\n\n",
-		AF.a, AF.f, BC.b, BC.c, DE.d, DE.e, HL.h, HL.l, SP, PC);
+	printf("Registers:\nAF: %02x%02x\tBC: %02x%02x\tZ N H C\nDE: %02x%02x\tHL: %02x%02x\t%x %x %x %x\nSP: %04x\tPC: %04x\n\n",
+		AF.a, AF.f, BC.b, BC.c, DE.d, DE.e, HL.h, HL.l, getFlag(Z), getFlag(N), getFlag(H), getFlag(C), SP, PC);
 }
 #endif
