@@ -13,6 +13,7 @@
 #define INTERNAL_ROM_SIZE 256
 
 uint8_t Memory[0x10000];
+uint8_t Cartridge[0x200000];
 uint8_t Halted, Stopped, WillDisableInterrupts, WillEnableInterrupts;
 
 // Registers
