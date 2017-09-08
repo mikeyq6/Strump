@@ -59,6 +59,8 @@ void resetFlag(uint8_t flag);
 
 uint8_t ReadMem(uint16_t location);
 void WriteMem(uint16_t location, uint8_t value);
+void EnableInterrupts();
+void DisableInterrupts();
 
 // Instructions
 void Run(uint8_t opcode, uint8_t param1, uint8_t param2);

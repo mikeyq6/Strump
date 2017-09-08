@@ -368,6 +368,7 @@ void Run(uint8_t opcode, uint8_t param1, uint8_t param2) {
 		case RET_Z:
 		case RET_C:
 		case RET:
+		case RETI:
 			RET_(opcode); break;
 		case RST_00H:
 		case RST_10H:
@@ -664,6 +665,8 @@ void RunCBInstruction(uint8_t opcode) {
 	}
 }
 
+void EnableInterrupts() {}
+void DisableInterrupts() {}
 
 void RRCA_() {
 	resetFlag(Z);
@@ -1225,7 +1228,9 @@ void RET_(uint8_t opcode) {
 		case RET_C:
 			if(getFlag(C)) { PC = address; SP -= 2; }; break;
 		case RET:
-			PC += PC = address; SP -= 2; break;
+			PC = address; SP -= 2; break;
+		case RETI:
+			PC = address; SP -= 2; EnableInterrupts(); break;
 		
 	}
 }
@@ -2408,6 +2413,8 @@ const char* CodeToString(uint8_t opcode) {
 			name = "RET C"; break;
 		case RET:
 			name = "RET"; break;
+		case RETI:
+			name = "RETI"; break;
 		case RST_00H:
 			name = "RST 00H"; break; 
 		case RST_10H:
