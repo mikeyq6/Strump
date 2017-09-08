@@ -233,7 +233,8 @@ void Run(uint8_t opcode, uint8_t param1, uint8_t param2) {
 		case AND_H:
 		case AND_L:
 		case AND_HL:
-			AND(opcode, 0, 0); break;
+		case AND_n:
+			AND(opcode, param1); break;
 		case OR_A:
 		case OR_B:
 		case OR_C:
@@ -242,7 +243,8 @@ void Run(uint8_t opcode, uint8_t param1, uint8_t param2) {
 		case OR_H:
 		case OR_L:
 		case OR_HL:
-			OR(opcode, 0, 0); break;
+		case OR_n:
+			OR(opcode, param1); break;
 		case ADD_A_A:
 		case ADD_A_B:
 		case ADD_A_C:
@@ -305,9 +307,8 @@ void Run(uint8_t opcode, uint8_t param1, uint8_t param2) {
 		case XOR_H:
 		case XOR_L:
 		case XOR_HL:
-			XOR(opcode, 0, 0); break;
 		case XOR_n:
-			XOR(opcode, param1, 0); break;
+			XOR(opcode, param1); break;
 		case INC_A:
 		case INC_B:
 		case INC_C:
@@ -719,7 +720,7 @@ void RLA_() {
 	}
 }
 
-void XOR(uint8_t opcode, uint8_t param, uint8_t param2) {
+void XOR(uint8_t opcode, uint8_t param) {
 	 
 	 switch(opcode) {
 		 case XOR_A:
@@ -872,7 +873,7 @@ void ADC(uint8_t opcode, uint8_t param) {
 	}
 	resetFlag(N);
 }
-void AND(uint8_t opcode, uint8_t param, uint8_t param2) {	
+void AND(uint8_t opcode, uint8_t param) {	
 	switch(opcode) {
 		case AND_B:
 			AF.a &= BC.b; break;
@@ -888,6 +889,8 @@ void AND(uint8_t opcode, uint8_t param, uint8_t param2) {
 			AF.a &= HL.l;break;
 		case AND_HL:
 			AF.a &= ReadMem(HL.hl); break;
+		case AND_n:
+			AF.a &= param; break;
 	}
 	
 	setFlag(H);
@@ -1620,7 +1623,7 @@ void RRC(uint8_t opcode) {
 	}
 }
 
-void OR(uint8_t opcode, uint8_t param, uint8_t param2) {
+void OR(uint8_t opcode, uint8_t param) {
 	resetFlag(Z);
 	resetFlag(N);
 	resetFlag(H);
@@ -1630,19 +1633,21 @@ void OR(uint8_t opcode, uint8_t param, uint8_t param2) {
 		case OR_A:
 			AF.a = 0xff; break;
 		case OR_B:
-			AF.a = AF.a | BC.b; break;
+			AF.a |= BC.b; break;
 		case OR_C:
-			AF.a = AF.a | BC.c; break;
+			AF.a |= BC.c; break;
 		case OR_D:
-			AF.a = AF.a | DE.d; break;
+			AF.a |= DE.d; break;
 		case OR_E:
-			AF.a = AF.a | DE.e; break;
+			AF.a |= DE.e; break;
 		case OR_H:
-			AF.a = AF.a | HL.h; break;
+			AF.a |= HL.h; break;
 		case OR_L:
-			AF.a = AF.a | HL.l; break;
+			AF.a |= HL.l; break;
 		case OR_HL:
-			AF.a = AF.a | ReadMem(HL.hl); break;
+			AF.a |= ReadMem(HL.hl); break;
+		case OR_n:
+			AF.a |= param; break;
 	}
 	
 	if(AF.a == 0) { setFlag(Z); }
@@ -1874,6 +1879,8 @@ short GetParameters(uint8_t opcode) {
 		case ADC_A_n:
 		case SUB_n:
 		case SBC_A_n:
+		case AND_n:
+		case OR_n:
 		case CP_n:
 		case ADD_A_n:
 		case LDH_n_A:
@@ -2157,6 +2164,8 @@ const char* CodeToString(uint8_t opcode) {
 			name = "AND A, L"; break;
 		case AND_HL:
 			name = "AND A, (HL)"; break;
+		case AND_n:
+			name = "AND %x"; break;
 		case XOR_A:
 			name = "XOR A"; break;
 		case XOR_B:
@@ -2191,6 +2200,8 @@ const char* CodeToString(uint8_t opcode) {
 			name = "OR L"; break;
 		case OR_HL:
 			name = "OR (HL)"; break;
+		case OR_n:
+			name = "OR %x"; break;
 		case ADD_A_A:
 			name = "ADD A, A"; break;
 		case ADD_A_B:

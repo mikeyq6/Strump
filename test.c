@@ -13,26 +13,26 @@ void clearFlags();
 	assert(HL.h == 0x9f);
 	assert(HL.l == 0xff);
 
-	XOR(XOR_C, 0, 0);
+	XOR(XOR_C, 0);
 	assert(AF.a == 0xfe);
 	assert(getFlag(Z) == 0);
 	
-	XOR(XOR_A, 0, 0);
+	XOR(XOR_A, 0);
 	assert(AF.a == 0);
 	assert(getFlag(Z) == 1);
 	
 	BC.b = 16;
-	XOR(XOR_B, 0, 0);
+	XOR(XOR_B, 0);
 	assert(AF.a == 16);
 	assert(getFlag(Z) == 0);
 	
 	HL.hl = 0x4fff;
 	WriteMem(HL.hl, 48);
-	XOR(XOR_HL, 0, 0);
+	XOR(XOR_HL, 0);
 	assert(AF.a == 32);
 	assert(getFlag(Z) == 0);
 	
-	XOR(XOR_n, 48, 0);
+	XOR(XOR_n, 48);
 	assert(AF.a == 16);
 	assert(getFlag(Z) == 0);
 	
@@ -72,13 +72,13 @@ void clearFlags();
 	// OR
 	AF.a = 5; // 0101
 	BC.b = 9; // 1001
-	OR(OR_B, 0, 0);
+	OR(OR_B, 0);
 	assert(AF.a == 13); // 1101
 	assert(getFlag(Z) == 0);
 	
 	AF.a = 0;
 	DE.d = 0;
-	OR(OR_D, 0, 0);
+	OR(OR_D, 0);
 	assert(AF.a == 0);
 	assert(getFlag(Z) == 1);
 	
@@ -128,6 +128,7 @@ void clearFlags();
 	assert(getFlag(C) == 0);
 	DAA_();
 	assert(AF.a == 0x57);
+		
  }
  
  void clearFlags() {

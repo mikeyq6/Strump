@@ -64,9 +64,9 @@ void WriteMem(uint16_t location, uint8_t value);
 void Run(uint8_t opcode, uint8_t param1, uint8_t param2);
 void RunCBInstruction(uint8_t opcode);
 
-void OR(uint8_t opcode, uint8_t param, uint8_t param2);
-void XOR(uint8_t opcode, uint8_t param, uint8_t param2);
-void AND(uint8_t opcode, uint8_t param, uint8_t param2);
+void OR(uint8_t opcode, uint8_t param);
+void XOR(uint8_t opcode, uint8_t param);
+void AND(uint8_t opcode, uint8_t param);
 void ADD(uint8_t opcode, uint8_t param);
 void ADC(uint8_t opcode, uint8_t param);
 void SUB(uint8_t opcode, uint8_t param);
