@@ -137,3 +137,4 @@ void clearFlags();
 	 resetFlag(C);
 	 resetFlag(H);
  }
+ 
