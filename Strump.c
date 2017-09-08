@@ -18,7 +18,10 @@ int main(int argc, char* argv[]) {
 		printf("Coulnd't open file '%s'\n", argv[1]);
 		return 2;
 	}
-	
+	uint16_t size = (uint16_t)fread(Cartridge, sizeof(uint8_t), CARTRIDGE_SIZE, fp);
+	/* printf("Size: %x, B5=%x, ac880=%x, bd330=%x", size, Cartridge[0xb5], Cartridge[0xac880], Cartridge[0xbd330]);
+	_getch();
+	return 0;*/
 	initCPU();
 	Start();
 	 

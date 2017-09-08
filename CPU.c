@@ -13,7 +13,7 @@ void TestInstructions();
 #ifdef STEPTHROUGH
 void DisplayState();
 int skip = 0;
-int skipuntil = 0x28;
+int skipuntil = 0x100;
 #endif
 
 void readInitialProgram();
@@ -29,6 +29,7 @@ uint8_t InternalRom[INTERNAL_ROM_SIZE] = { 0x31,0xFE,0xFF,0xAF,0x21,0xFF,0x9F,0x
 
 void initCPU() {
 	Halted = Stopped = WillEnableInterrupts = WillDisableInterrupts = 0;
+	Startup = 1;
 	
 	PC = 0x000;
 	SP = 0xfffe;
@@ -85,7 +86,7 @@ void Start() {
 	setDefaults();
 
 	for(;;) {
-		uint8_t inst = InternalRom[PC];
+		uint8_t inst = Startup ? InternalRom[PC] : Cartridge[PC];
 		short params = GetParameters(inst);
 		
 		//printf("%x ", InternalRom[i]);
@@ -115,6 +116,7 @@ void Start() {
 			else if(x == 's') { skip = 0xfff;}
 		}
 #endif
+		if(PC >= 0x100) { Startup = 0; }
 	}
 }
  
@@ -133,7 +135,9 @@ void resetFlag(uint8_t flag) {
 // Memory
 uint8_t ReadMem(uint16_t location) {
 	
-	if(location >= 0xe000 && location < 0xfe00) { // Allow for the mirrored internal RAM
+	if(location >= 0x100 && location <= 0x14c) {
+		return Cartridge[location];
+	} else if(location >= 0xe000 && location < 0xfe00) { // Allow for the mirrored internal RAM
 		return Memory[location - 0x2000];
 	} else {
 		return Memory[location];

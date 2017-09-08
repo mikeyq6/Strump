@@ -11,10 +11,11 @@
 
 #define ROM_PATH ".\\DMG_ROM.bin"
 #define INTERNAL_ROM_SIZE 256
+#define CARTRIDGE_SIZE 0x200000
 
 uint8_t Memory[0x10000];
-uint8_t Cartridge[0x200000];
-uint8_t Halted, Stopped, WillDisableInterrupts, WillEnableInterrupts;
+uint8_t Cartridge[CARTRIDGE_SIZE];
+uint8_t Halted, Stopped, WillDisableInterrupts, WillEnableInterrupts, Startup;
 
 // Registers
 union {
