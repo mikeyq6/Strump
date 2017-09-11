@@ -15,31 +15,31 @@
 
 uint8_t Memory[0x10000];
 uint8_t Cartridge[CARTRIDGE_SIZE];
-uint8_t Halted, Stopped, WillDisableInterrupts, WillEnableInterrupts, Startup;
+uint8_t Halted, Stopped, WillDisableInterrupts, WillEnableInterrupts, Startup, InterruptsEnabled;
 
 // Registers
-union {
+register union {
 	struct {
 		uint8_t f;
 		uint8_t a;
 	};
 	uint16_t af;
 } AF;
-union {
+register union {
 	struct {
 		uint8_t c;
 		uint8_t b;
 	};
 	uint16_t bc;
 } BC;
-union {
+register union {
 	struct {
 		uint8_t e;
 		uint8_t d;
 	};
 	uint16_t de;
 } DE;
-union {
+register union {
 	struct {
 		uint8_t l;
 		uint8_t h;
