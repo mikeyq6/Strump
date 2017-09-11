@@ -9,6 +9,12 @@
 #define H 32
 #define C 16
 
+#define I_VBlank 	0x40
+#define I_LCDC 		0x48
+#define I_Timer		0x50
+#define I_Serial	0x58
+#define I_Joypad	0x60
+
 #define ROM_PATH ".\\DMG_ROM.bin"
 #define INTERNAL_ROM_SIZE 256
 #define CARTRIDGE_SIZE 0x200000
@@ -59,10 +65,12 @@ uint8_t getFlag(uint8_t flag);
 void setFlag(uint8_t flag);
 void resetFlag(uint8_t flag);
 
+// Memory
 uint8_t ReadMem(uint16_t location);
 void WriteMem(uint16_t location, uint8_t value);
-void EnableInterrupts();
-void DisableInterrupts();
+
+// Interrupts
+void CheckInterrupts();
 
 // Instructions
 void Run(uint8_t opcode, uint8_t param1, uint8_t param2);
