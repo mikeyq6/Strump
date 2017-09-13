@@ -6,7 +6,7 @@
 
 #define RUNTESTS
 #define STEPTHROUGH 0
-#define DEBUG_TIMER
+//#define DEBUG_TIMER
 
 #ifdef RUNTESTS
 void TestInstructions();
@@ -14,7 +14,7 @@ void TestInstructions();
 #ifdef STEPTHROUGH 
 void DisplayState();
 int skip = 0;
-int skipuntil = 0; //0x68;
+int skipuntil = 0x68;
 short tempShow = 1;
 #endif
 
@@ -85,12 +85,13 @@ void Start() {
 	//runInitialProgram();
 	setDefaults();
 	
-	#ifdef DEBUG_TIMER
+#ifdef DEBUG_TIMER
 		WriteMem(TAC, 0x07);
-	#endif
+		InterruptsEnabled = 1;
+#endif
 
 	for(;;) {
-		uint8_t inst = Startup ? InternalRom[PC] : Cartridge[PC];
+		uint8_t inst = GetNextInstruction();
 		short params = GetParameters(inst);
 		if(WillEnableInterrupts) {
 			WillEnableInterrupts = 0;
@@ -127,10 +128,8 @@ void Start() {
 		if(ShouldPrint()) { 
 			printf("\n");
 		}
-		UpdateTimer(inst);
-#ifdef STEPTHROUGH
 		
-			
+#ifdef STEPTHROUGH
 		if(skip > 0) { 
 			if(ShouldPrint()) {
 				DisplayState();
@@ -153,6 +152,7 @@ void Start() {
 		if(InterruptsEnabled) {
 			CheckInterrupts();
 		}
+		UpdateTimer(inst);
 	}
 }
 
@@ -163,7 +163,7 @@ short ShouldPrint() {
 uint8_t getFlag(uint8_t flag) {
 	return (AF.f & flag) == flag ? 1 : 0;
 }
-void setFlag(uint8_t flag) {
+void setFlag(uint8_t flag) { 
 	AF.f |= flag;
 }
 void resetFlag(uint8_t flag) {
@@ -206,32 +206,39 @@ void CheckInterrupts() {
 	
 	// Check VBlank
 	if(iFlag & bit) {
-		PushPCOntoStack();
+		PushPCOntoStack(); 
 		PC = I_VBlank;
+		ResetInterrupt(I_VBlank);
 	}
 	bit <<= 1;
 	// Check LCDC
 	if(iFlag & bit) {
 		PushPCOntoStack();
 		PC = I_LCDC;
+		ResetInterrupt(I_LCDC);
 	}
 	bit <<= 1;
 	// Check Timer
+	//printf("iflag=%02x, bit=%02x\n", iFlag, bit);
 	if(iFlag & bit) {
 		PushPCOntoStack();
-		PC = I_Timer;
+		PC = I_Timer; 
+		ResetInterrupt(I_Timer);
+		_getch();
 	}
 	bit <<= 1;
 	// Check Serial
 	if(iFlag & bit) {
 		PushPCOntoStack();
 		PC = I_Serial;
+		ResetInterrupt(I_Serial);
 	}
 	bit <<= 1;
 	// Check Serial
 	if(iFlag & bit) {
 		PushPCOntoStack();
 		PC = I_Joypad;
+		ResetInterrupt(I_Joypad);
 	}
 }
 
@@ -240,15 +247,15 @@ void SetInterrupt(uint8_t iRegister) {
 	
 	switch(iRegister) {
 		case I_VBlank:
-			WriteMem(IF, iFlag |= 0x01); break;
+			Memory[IF] = (iFlag | 0x01); break;
 		case I_LCDC:
-			WriteMem(IF, iFlag |= 0x02); break;
+			Memory[IF] = (iFlag | 0x02); break;
 		case I_Timer:
-			WriteMem(IF, iFlag |= 0x04); break;
+			Memory[IF] = (iFlag | 0x04); break;
 		case I_Serial:
-			WriteMem(IF, iFlag |= 0x08); break;
+			Memory[IF] = (iFlag | 0x08); break;
 		case I_Joypad:
-			WriteMem(IF, iFlag |= 0x0f); break;
+			Memory[IF] = (iFlag | 0x0f); break;
 	}
 }
 void ResetInterrupt(uint8_t iRegister) {
@@ -256,15 +263,15 @@ void ResetInterrupt(uint8_t iRegister) {
 	
 	switch(iRegister) {
 		case I_VBlank:
-			WriteMem(IF, iFlag &= 0xfe); break;
+			Memory[IF] = (iFlag & 0xfe); break;
 		case I_LCDC:
-			WriteMem(IF, iFlag &= 0xfd); break;
+			Memory[IF] = (iFlag & 0xfd); break;
 		case I_Timer:
-			WriteMem(IF, iFlag &= 0xfb); break;
+			Memory[IF] = (iFlag & 0xfb); break;
 		case I_Serial:
-			WriteMem(IF, iFlag &= 0xf7); break;
+			Memory[IF] = (iFlag & 0xf7); break;
 		case I_Joypad:
-			WriteMem(IF, iFlag &= 0xef); break;
+			Memory[IF] = (iFlag & 0xef); break;
 	}
 }
 
@@ -287,7 +294,9 @@ void UpdateTimer(uint8_t opcode) {
 	
 	if(rTAC & 0x04) { // Timer is started
 		uint16_t tmp = rDiv + cycles;
-		printf("tmp=%x, speed=%x\n", tmp, speed);
+#ifdef DEBUG_TIMER
+		printf("DIV=%02x, F=%02x,tmp=%x, speed=%x\n", Memory[DIV], AF.f, tmp, speed);
+#endif
 		if(tmp >= speed) {
 			rDiv = (rDiv + cycles) % speed;
 			setFlag(C);
@@ -887,6 +896,9 @@ void RunCBInstruction(uint8_t opcode) {
 		case SRL_HL:
 			SRL(opcode);
 	}
+}
+uint8_t GetNextInstruction() {
+	return Startup ? InternalRom[PC] : Cartridge[PC];
 }
 
 void RRCA_() {

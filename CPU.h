@@ -78,6 +78,7 @@ void ResetInterrupt(uint8_t iRegister);
 void UpdateTimer(uint8_t opcode);
 
 // Instructions
+uint8_t GetNextInstruction();
 void Run(uint8_t opcode, uint8_t param1, uint8_t param2);
 void RunCBInstruction(uint8_t opcode);
 
