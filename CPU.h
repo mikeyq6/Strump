@@ -9,13 +9,14 @@
 #define H 32
 #define C 16
 
+#define FREQ 4194304
+
 #define I_VBlank 	0x40
 #define I_LCDC 		0x48
 #define I_Timer		0x50
 #define I_Serial	0x58
 #define I_Joypad	0x60
 
-#define ROM_PATH ".\\DMG_ROM.bin"
 #define INTERNAL_ROM_SIZE 256
 #define CARTRIDGE_SIZE 0x200000
 
@@ -55,6 +56,7 @@ register union {
 
 register uint16_t SP;
 register uint16_t PC;
+register uint16_t rDiv;
 
 // Init
 void initCPU();
@@ -69,8 +71,11 @@ void resetFlag(uint8_t flag);
 uint8_t ReadMem(uint16_t location);
 void WriteMem(uint16_t location, uint8_t value);
 
-// Interrupts
+// Interrupts & Timers
 void CheckInterrupts();
+void SetInterrupt(uint8_t iRegister);
+void ResetInterrupt(uint8_t iRegister);
+void UpdateTimer(uint8_t opcode);
 
 // Instructions
 void Run(uint8_t opcode, uint8_t param1, uint8_t param2);

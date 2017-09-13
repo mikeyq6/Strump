@@ -6,6 +6,7 @@
 
 #define RUNTESTS
 #define STEPTHROUGH 0
+#define DEBUG_TIMER
 
 #ifdef RUNTESTS
 void TestInstructions();
@@ -13,7 +14,7 @@ void TestInstructions();
 #ifdef STEPTHROUGH 
 void DisplayState();
 int skip = 0;
-int skipuntil = 0x68;
+int skipuntil = 0; //0x68;
 short tempShow = 1;
 #endif
 
@@ -21,7 +22,7 @@ void readInitialProgram();
 void setDefaults();
 void runInitialProgram();
 short GetParameters(uint8_t opcode);
-uint16_t GetCycles(opcode);
+uint8_t GetCycles(opcode);
 short ShouldPrint();
 void PushPCOntoStack();
 
@@ -45,6 +46,7 @@ void setDefaults() {
 	DE.de = 0x00d8;
 	HL.hl = 0x014d;
 	SP = 0xfffe;
+	rDiv = 0;
 	WriteMem(TIMA, 0x00); // TIMA
 	WriteMem(TMA, 0x00); // TMA
 	WriteMem(TAC, 0x00); // TAC
@@ -82,6 +84,10 @@ void Start() {
 	//readInitialProgram();
 	//runInitialProgram();
 	setDefaults();
+	
+	#ifdef DEBUG_TIMER
+		WriteMem(TAC, 0x07);
+	#endif
 
 	for(;;) {
 		uint8_t inst = Startup ? InternalRom[PC] : Cartridge[PC];
@@ -121,6 +127,7 @@ void Start() {
 		if(ShouldPrint()) { 
 			printf("\n");
 		}
+		UpdateTimer(inst);
 #ifdef STEPTHROUGH
 		
 			
@@ -181,14 +188,16 @@ uint8_t ReadMem(uint16_t location) {
 	}
 	return 0;
 }
- void WriteMem(uint16_t location, uint8_t value) {
-	 
-	if(location >= 0xe000 && location < 0xfe00) { // Allow for the mirrored internal RAM
+void WriteMem(uint16_t location, uint8_t value) {
+	
+	if(location == DIV) {
+		Memory[location] = 0; // Always set DIV to 0 on write
+	} else if(location >= 0xe000 && location < 0xfe00) { // Allow for the mirrored internal RAM
 		Memory[location - 0x2000] = value;
 	} else {
 		Memory[location] = value;
 	}
- }
+}
  
 // InterruptsEnabled
 void CheckInterrupts() {
@@ -223,6 +232,75 @@ void CheckInterrupts() {
 	if(iFlag & bit) {
 		PushPCOntoStack();
 		PC = I_Joypad;
+	}
+}
+
+void SetInterrupt(uint8_t iRegister) {
+	uint8_t iFlag = ReadMem(IF);
+	
+	switch(iRegister) {
+		case I_VBlank:
+			WriteMem(IF, iFlag |= 0x01); break;
+		case I_LCDC:
+			WriteMem(IF, iFlag |= 0x02); break;
+		case I_Timer:
+			WriteMem(IF, iFlag |= 0x04); break;
+		case I_Serial:
+			WriteMem(IF, iFlag |= 0x08); break;
+		case I_Joypad:
+			WriteMem(IF, iFlag |= 0x0f); break;
+	}
+}
+void ResetInterrupt(uint8_t iRegister) {
+	uint8_t iFlag = ReadMem(IF);
+	
+	switch(iRegister) {
+		case I_VBlank:
+			WriteMem(IF, iFlag &= 0xfe); break;
+		case I_LCDC:
+			WriteMem(IF, iFlag &= 0xfd); break;
+		case I_Timer:
+			WriteMem(IF, iFlag &= 0xfb); break;
+		case I_Serial:
+			WriteMem(IF, iFlag &= 0xf7); break;
+		case I_Joypad:
+			WriteMem(IF, iFlag &= 0xef); break;
+	}
+}
+
+void UpdateTimer(uint8_t opcode) {
+	uint8_t cycles = GetCycles(opcode);
+	uint8_t rTAC = ReadMem(TAC);
+	
+	uint32_t speed = 0;
+	
+	switch(rTAC & 0x3) {
+		case 0:
+			speed = FREQ / 4096; break;
+		case 1:
+			speed = FREQ / 262144; break;
+		case 2:
+			speed = FREQ / 65536; break;
+		case 3: 
+			speed = FREQ / 16384; break;
+	}
+	
+	if(rTAC & 0x04) { // Timer is started
+		uint16_t tmp = rDiv + cycles;
+		printf("tmp=%x, speed=%x\n", tmp, speed);
+		if(tmp >= speed) {
+			rDiv = (rDiv + cycles) % speed;
+			setFlag(C);
+			
+			Memory[DIV]++;
+			if(Memory[DIV] == 0) {
+				// set timer interrupt
+				SetInterrupt(I_Timer);
+			}
+		} else {
+			rDiv += cycles;
+		}
+		
 	}
 }
 
@@ -2210,15 +2288,46 @@ short GetParameters(uint8_t opcode) {
 	return numParams;
 }
 
-uint16_t GetCycles(opcode) {
-	uint16_t cycles = 4;
+uint8_t GetCycles(opcode) {
+	uint8_t cycles = 4;
 	
 	switch(opcode) {
+		case CALL_nn:
+			cycles = 24; break;
+		case LD_nn_SP:
+			cycles = 20; break;
+		case RET:
+		case RETI:
+		case RST_00H:
+		case RST_08H:
+		case RST_10H:
+		case RST_18H:
+		case RST_20H:
+		case RST_28H:
+		case RST_30H:
+		case RST_38H:
+		case PUSH_AF:
+		case PUSH_BC:
+		case PUSH_DE:
+		case PUSH_HL:
+		case JP_nn:
+		case ADD_SP_n:
+		case LD_nn_A:
+		case LD_A_nn:
+			cycles = 16; break;
 		case LD_BC_nn:
 		case LD_DE_nn:
 		case LD_HL_nn:
 		case LD_SP_nn:
 		case JR_n:
+		case LDH_A_n:
+		case LDH_n_A:
+		case POP_AF:
+		case POP_BC:
+		case POP_DE:
+		case POP_HL:
+		case LD_HL_SP_n:
+		case LD__HL__n:
 			cycles = 12; break;
 		case LD_BC_A:
 		case LD_DE_A:
@@ -2243,17 +2352,70 @@ uint16_t GetCycles(opcode) {
 		case LD_E_n:
 		case LD_H_n:
 		case LD_L_n:
-		case LD__HL__n:
+		case LD_A_HL:
+		case LD_B_HL:
+		case LD_C_HL:
+		case LD_D_HL:
+		case LD_E_HL:
+		case LD_H_HL:
+		case LD_L_HL:
+		case LD_HL_A:
+		case LD_HL_B:
+		case LD_HL_C:
+		case LD_HL_D:
+		case LD_HL_E:
+		case LD_HL_H:
+		case LD_HL_L:
+		case LD__C__A:
+		case LD_A__C_:
+		case LD_SP_HL:
 		case ADD_HL_BC:
 		case ADD_HL_DE:
 		case ADD_HL_HL:
 		case ADD_HL_SP:
+		case ADD_A_n:
+		case ADD_A_HL:
+		case ADC_A_n:
+		case ADC_A_HL:
+		case SUB_n:
+		case SUB_HL:
+		case SBC_A_n:
+		case SBC_A_HL:
+		case AND_n:
+		case AND_HL:
+		case OR_n:
+		case OR_HL:
+		case XOR_n:
+		case XOR_HL:
+		case CP_n:
+		case CP_HL:
 			cycles = 8; break;
 		case JR_Z_n:
+			if(getFlag(Z)) { cycles = 12; } else { cycles = 8; }; break;
 		case JR_C_n:
+			if(getFlag(C)) { cycles = 12; } else { cycles = 8; }; break;
 		case JR_NZ_n:
+			if(!getFlag(Z)) { cycles = 12; } else { cycles = 8; }; break;
 		case JR_NC_n:
-			cycles = 0x080c;
+			if(!getFlag(C)) { cycles = 12; } else { cycles = 8; }; break;
+		case RET_Z:
+			if(getFlag(Z)) { cycles = 20; } else { cycles = 8; }; break;
+		case RET_C:
+			if(getFlag(C)) { cycles = 20; } else { cycles = 8; }; break;
+		case RET_NZ:
+			if(!getFlag(Z)) { cycles = 20; } else { cycles = 8; }; break;
+		case RET_NC:
+			if(!getFlag(C)) { cycles = 20; } else { cycles = 8; }; break;
+		case CALL_C_nn:
+			if(getFlag(C)) { cycles = 24; } else { cycles = 12; }; break;
+		case CALL_Z_nn:
+			if(getFlag(Z)) { cycles = 24; } else { cycles = 12; }; break;
+		case CALL_NC_nn:
+			if(!getFlag(C)) { cycles = 24; } else { cycles = 12; }; break;
+		case CALL_NZ_nn:
+			if(!getFlag(Z)) { cycles = 24; } else { cycles = 12; }; break;
+		default:
+			cycles = 4; break;
 		
 	}
 	
@@ -3286,7 +3448,8 @@ const char* CBCodeToString(uint8_t opcode) {
 
 #ifdef STEPTHROUGH
 void DisplayState() {
-	printf("Registers:\nAF: %02x%02x\tBC: %02x%02x\tZ N H C\nDE: %02x%02x\tHL: %02x%02x\t%x %x %x %x\nSP: %04x\tPC: %04x\n\n",
-		AF.a, AF.f, BC.b, BC.c, DE.d, DE.e, HL.h, HL.l, getFlag(Z), getFlag(N), getFlag(H), getFlag(C), SP, PC);
+	printf("Registers:\nAF: %02x%02x\tBC: %02x%02x\tZ N H C\nDE: %02x%02x\tHL: %02x%02x\t%x %x %x %x\nSP: %04x\tPC: %04x\nIF: %02x\tDIV: %02x\trDiv: %x\n",
+		AF.a, AF.f, BC.b, BC.c, DE.d, DE.e, HL.h, HL.l, getFlag(Z), getFlag(N), getFlag(H), getFlag(C), SP, PC,
+		Memory[IF], Memory[DIV], rDiv);
 }
 #endif
