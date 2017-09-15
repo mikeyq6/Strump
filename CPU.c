@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <conio.h>
 #include <stdlib.h>
-//#include <gl/glut.h>
 
 #include "CPU.h"
 #include "test.h"
