@@ -23,12 +23,17 @@ int main(int argc, char* argv[]) {
 	_getch();
 	return 0;*/
 	initCPU();
+	SetCartridgeInfo();
+	DisplayCartridgeInfo();
+	_getch();
+
 	Start();
 	 
 	//printf("a=%u, f=%u, af=%u\n", AF.a, AF.f, AF.af);
 	
 	printf("\nAny key to quit");
 	_getch();
+	Quit();
 	 
 	return 0;
 }

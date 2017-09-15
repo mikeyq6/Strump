@@ -59,9 +59,28 @@ register uint16_t SP;
 register uint16_t PC;
 register uint16_t rDiv;
 
+typedef struct _cartridgeInfo {
+	char title[17];
+	uint8_t gbc;
+	uint8_t sgb;
+	uint8_t type;
+	char *typeName;
+	uint8_t romType;
+	char *romTypeName;
+	uint8_t ramType;
+	char *ramTypeName;
+	uint8_t destinationCode;
+	uint8_t licenseeCode;
+} CartridgeInfo;
+
+CartridgeInfo *CartInfo;
+
 // Init
 void initCPU();
 void Start();
+void Quit();
+void SetCartridgeInfo();
+void DisplayCartridgeInfo();
 
 // Flags
 uint8_t getFlag(uint8_t flag);

@@ -26,7 +26,7 @@ void clearFlags();
 	assert(AF.a == 16);
 	assert(getFlag(Z) == 0);
 	
-	HL.hl = 0x4fff;
+	HL.hl = 0x6000;
 	WriteMem(HL.hl, 48);
 	XOR(XOR_HL, 0);
 	assert(AF.a == 32);
