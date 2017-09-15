@@ -210,17 +210,18 @@ void WriteMem(uint16_t location, uint8_t value) {
 // InterruptsEnabled
 void CheckInterrupts() {
 	uint8_t bit = 1;
-	uint8_t iFlag = ReadMem(IF);
+	uint8_t iFlag = Memory[IF];
+	uint8_t ieFlag = Memory[IE];
 	
 	// Check VBlank
-	if(iFlag & bit) {
+	if(iFlag & ieFlag & bit) {
 		PushPCOntoStack(); 
 		PC = I_VBlank;
 		ResetInterrupt(I_VBlank);
 	}
 	bit <<= 1;
 	// Check LCDC
-	if(iFlag & bit) {
+	if(iFlag & ieFlag & bit) {
 		PushPCOntoStack();
 		PC = I_LCDC;
 		ResetInterrupt(I_LCDC);
@@ -228,7 +229,7 @@ void CheckInterrupts() {
 	bit <<= 1;
 	// Check Timer
 	//printf("iflag=%02x, bit=%02x\n", iFlag, bit);
-	if(iFlag & bit) {
+	if(iFlag & ieFlag & bit) {
 		PushPCOntoStack();
 		PC = I_Timer; 
 		ResetInterrupt(I_Timer);
@@ -236,14 +237,14 @@ void CheckInterrupts() {
 	}
 	bit <<= 1;
 	// Check Serial
-	if(iFlag & bit) {
+	if(iFlag & ieFlag & bit) {
 		PushPCOntoStack();
 		PC = I_Serial;
 		ResetInterrupt(I_Serial);
 	}
 	bit <<= 1;
 	// Check Serial
-	if(iFlag & bit) {
+	if(iFlag & ieFlag & bit) {
 		PushPCOntoStack();
 		PC = I_Joypad;
 		ResetInterrupt(I_Joypad);
