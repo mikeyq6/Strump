@@ -23,6 +23,7 @@
 uint8_t Memory[0x10000];
 uint8_t Cartridge[CARTRIDGE_SIZE];
 uint8_t Halted, Stopped, WillDisableInterrupts, WillEnableInterrupts, Startup, InterruptsEnabled;
+uint8_t RomBank, RamBank, RamEnabled;
 
 // Registers
 register union {

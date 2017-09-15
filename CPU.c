@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <conio.h>
+//#include <gl/glut.h>
 
 #include "CPU.h"
 #include "test.h"
@@ -32,6 +33,9 @@ uint8_t InternalRom[INTERNAL_ROM_SIZE] = { 0x31,0xFE,0xFF,0xAF,0x21,0xFF,0x9F,0x
 void initCPU() {
 	Halted = Stopped = WillEnableInterrupts = WillDisableInterrupts = InterruptsEnabled = 0;
 	Startup = 1;
+	RomBank = 1;
+	RamBank = 1;
+	RamEnabled = 0;
 	
 	PC = 0x000;
 	
@@ -192,6 +196,10 @@ void WriteMem(uint16_t location, uint8_t value) {
 	
 	if(location == DIV) {
 		Memory[location] = 0; // Always set DIV to 0 on write
+	} else if(location >= 0x2000 && location <= 0x3fff) { // ROM Switching
+		RomBank = value;
+	} else if(location >= 0x4000 && location <= 0x5fff) { // RAM Switching
+		RamBank = value;
 	} else if(location >= 0xe000 && location < 0xfe00) { // Allow for the mirrored internal RAM
 		Memory[location - 0x2000] = value;
 	} else {
@@ -898,7 +906,14 @@ void RunCBInstruction(uint8_t opcode) {
 	}
 }
 uint8_t GetNextInstruction() {
-	return Startup ? InternalRom[PC] : Cartridge[PC];
+	uint8_t inst = 0;
+	
+	if(PC >= 0x4000 && PC <= 0x7fff) {
+		inst = Cartridge[((RomBank - 1) * 0x4000) + 0x4000];
+	} else {
+		inst = Startup ? InternalRom[PC] : Cartridge[PC];
+	}
+	return inst;
 }
 
 void RRCA_() {
