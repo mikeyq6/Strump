@@ -105,62 +105,129 @@ void SetCartridgeInfo() {
 	CartInfo->ramType = Cartridge[0x149];
 	CartInfo->destinationCode = Cartridge[0x14a];
 	CartInfo->licenseeCode = Cartridge[0x14b];
+	CartInfo->hasTimer = 0;
+	CartInfo->hasRumble = 0;
+	CartInfo->hasBattery = 0;
+	CartInfo->hasSRAM = 0;
 	SetCartridgeNames();
 }
 void SetCartridgeNames() {
 	switch(CartInfo->type) {
 		case 0:
-			CartInfo->typeName = "ROM ONLY"; break;
+			CartInfo->typeName = "ROM ONLY"; 
+			CartInfo->controllerType = NO_ROMBANK; 
+			break;
 		case 0x1:
-			CartInfo->typeName = "ROM+MBC1"; break;
+			CartInfo->typeName = "ROM+MBC1"; 
+			CartInfo->controllerType = MBC1; 
+			break;
 		case 0x2:
-			CartInfo->typeName = "ROM+MBC1+RAM"; break;
+			CartInfo->typeName = "ROM+MBC1+RAM"; 
+			CartInfo->controllerType = MBC1; 
+			break;
 		case 0x3:
-			CartInfo->typeName = "ROM+MBC1+RAM+BATT"; break;
+			CartInfo->typeName = "ROM+MBC1+RAM+BATT"; 
+			CartInfo->controllerType = MBC1; 
+			CartInfo->hasBattery = 1;
+			break;
 		case 0x5:
-			CartInfo->typeName = "ROM-MBC2"; break;
+			CartInfo->typeName = "ROM-MBC2"; 
+			CartInfo->controllerType = MBC2; 
+			break;
 		case 0x6:
-			CartInfo->typeName = "ROM-MBC2+BATTERY"; break;
+			CartInfo->typeName = "ROM-MBC2+BATTERY";
+			CartInfo->controllerType = MBC2; 
+			CartInfo->hasBattery = 1;
+			break;
 		case 0x8:
-			CartInfo->typeName = "ROM+RAM"; break;
+			CartInfo->typeName = "ROM+RAM"; 
+			CartInfo->controllerType = NO_ROMBANK; 
+			break;
 		case 0x9:
-			CartInfo->typeName = "ROM+RAM+BATTERY"; break;
+			CartInfo->typeName = "ROM+RAM+BATTERY";
+			CartInfo->controllerType = NO_ROMBANK; 
+			CartInfo->hasBattery = 1;
+			break;
 		case 0xb:
-			CartInfo->typeName = "ROM+MM01"; break;
+			CartInfo->typeName = "ROM+MM01";
+			CartInfo->controllerType = MM01; 
+			break;
 		case 0xc:
-			CartInfo->typeName = "ROM+MM01+SRAM"; break;
+			CartInfo->typeName = "ROM+MM01+SRAM"; 
+			CartInfo->controllerType = MM01; 
+			CartInfo->hasSRAM = 1;
+			break;
 		case 0xd:
-			CartInfo->typeName = "ROM+MM01+SRAM+BATT"; break;
+			CartInfo->typeName = "ROM+MM01+SRAM+BATT"; 
+			CartInfo->controllerType = MM01; 
+			CartInfo->hasBattery = 1;
+			CartInfo->hasSRAM = 1;
+			break;
 		case 0xf:
-			CartInfo->typeName = "ROM+MBC3+TIMER+BATT"; break;
+			CartInfo->typeName = "ROM+MBC3+TIMER+BATT";
+			CartInfo->controllerType = MBC3; 
+			CartInfo->hasBattery = 1;
+			break;
 		case 0x10:
-			CartInfo->typeName = "ROM+MBC3+TIMER+RAM+BATT"; break;
+			CartInfo->typeName = "ROM+MBC3+TIMER+RAM+BATT";
+			CartInfo->controllerType = MBC3; 
+			CartInfo->hasBattery = 1;
+			break;
 		case 0x11:
-			CartInfo->typeName = "ROM+MBC3"; break;
+			CartInfo->typeName = "ROM+MBC3";
+			CartInfo->controllerType = MBC3; 
+			break;
 		case 0x12:
-			CartInfo->typeName = "ROM+MBC3+RAM"; break;
+			CartInfo->typeName = "ROM+MBC3+RAM";
+			CartInfo->controllerType = MBC3; 
+			break;
 		case 0x13:
-			CartInfo->typeName = "ROM+MBC3+RAM+BATT"; break;
+			CartInfo->typeName = "ROM+MBC3+RAM+BATT";
+			CartInfo->controllerType = MBC3; 
+			CartInfo->hasBattery = 1;
+			break;
 		case 0x19:
-			CartInfo->typeName = "ROM+MBC5"; break;
+			CartInfo->typeName = "ROM+MBC5";
+			CartInfo->controllerType = MBC5; 
+			break;
 		case 0x1a:
-			CartInfo->typeName = "ROM+MBC5+RAM"; break;
+			CartInfo->typeName = "ROM+MBC5+RAM";
+			CartInfo->controllerType = MBC5; 
+			break;
 		case 0x1b:
-			CartInfo->typeName = "ROM+MBC5+RAM+BATT"; break;
+			CartInfo->typeName = "ROM+MBC5+RAM+BATT";
+			CartInfo->controllerType = MBC5; 
+			CartInfo->hasBattery = 1;
+			break;
 		case 0x1c:
-			CartInfo->typeName = "ROM+MBC5+RUMBLE"; break;
+			CartInfo->typeName = "ROM+MBC5+RUMBLE";
+			CartInfo->controllerType = MBC5; 
+			CartInfo->hasRumble = 1;
+			break;
 		case 0x1d:
-			CartInfo->typeName = "ROM+MBC5+RUMBLE+SRAM"; break;
+			CartInfo->typeName = "ROM+MBC5+RUMBLE+SRAM";
+			CartInfo->controllerType = MBC5; 
+			CartInfo->hasRumble = 1;
+			break;
 		case 0x1e:
-			CartInfo->typeName = "ROM+MBC5+RUMBLE+SRAM+BATT"; break;
+			CartInfo->typeName = "ROM+MBC5+RUMBLE+SRAM+BATT";
+			CartInfo->controllerType = MBC5; 
+			CartInfo->hasRumble = 1;
+			CartInfo->hasBattery = 1;
+			CartInfo->hasSRAM = 1;
+			break;
 		case 0x1f:
 			CartInfo->typeName = "Pocket Camera"; break;
 		case 0xfd:
 			CartInfo->typeName = "Bandai TAMA5"; break;
 		case 0xfe:
-			CartInfo->typeName = "Hudson HuC-3"; break;
+			CartInfo->typeName = "Hudson HuC-3";
+			CartInfo->controllerType = MBC1; 
+			break;
 		case 0xff:
-			CartInfo->typeName = "Hudson HuC-1"; break;
+			CartInfo->typeName = "Hudson HuC-1"; 
+			CartInfo->controllerType = MBC1; 
+			break;
 	}
 	
 	switch(CartInfo->romType) {
@@ -449,8 +516,8 @@ void UpdateTimer(uint8_t opcode) {
 }
 
 static void PushPCOntoStack() {
-	WriteMem(SP, (uint8_t)(PC >> 8)); SP--;
-	WriteMem(SP, (uint8_t)(PC & 0xff)); SP--;
+	Memory[SP] = (uint8_t)(PC >> 8); SP--;
+	Memory[SP] = (uint8_t)(PC & 0xff); SP--;
 }
  
 // Instructions 
@@ -1602,8 +1669,8 @@ void CALL(uint8_t opcode, uint8_t param1, uint8_t param2) {
 	
 	if(doCall) {
 		uint16_t next = PC + 1;
-		WriteMem(SP, (uint8_t)(next >> 8)); SP--;
-		WriteMem(SP, (uint8_t)(next & 0xff)); SP--;
+		Memory[SP] = (uint8_t)(next >> 8); SP--;
+		Memory[SP] = (uint8_t)(next & 0xff); SP--;
 		PC = address;
 	}
 }
@@ -2328,13 +2395,13 @@ void RST(uint8_t opcode) {
 void PUSH(uint8_t opcode) {
 	switch(opcode) {
 		case PUSH_AF:
-			WriteMem(SP, AF.f); WriteMem(SP-1, AF.a); SP -= 2; break;
+			Memory[SP] = AF.f; Memory[SP-1] = AF.a; SP -= 2; break;
 		case PUSH_DE:
-			WriteMem(SP, DE.e); WriteMem(SP-1, DE.d); SP -= 2; break;
+			Memory[SP] = DE.e; Memory[SP-1] = DE.d; SP -= 2; break;
 		case PUSH_BC:
-			WriteMem(SP, BC.c); WriteMem(SP-1, BC.b); SP -= 2; break;
+			Memory[SP] = BC.c; Memory[SP-1] = BC.b; SP -= 2; break;
 		case PUSH_HL:
-			WriteMem(SP, HL.l); WriteMem(SP-1, HL.h); SP -= 2; break;
+			Memory[SP] = HL.l; Memory[SP-1] = HL.h; SP -= 2; break;
 	}
 }
 void POP(uint8_t opcode) {
