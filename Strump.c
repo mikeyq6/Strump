@@ -2,6 +2,7 @@
 #include <conio.h>
 #include "Strump.h"
 #include "CPU.h"
+#include "ROMInfo.h"
 #include "Draw.h"
 
 int main(int argc, char* argv[]) {
