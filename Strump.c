@@ -29,7 +29,7 @@ int main(int argc, char* argv[]) {
 	DisplayCartridgeInfo();
 	_getch();
 
-	//drawInit(argc, argv);
+	drawInit(argc, argv);
 	Start();
 	 
 	//printf("a=%u, f=%u, af=%u\n", AF.a, AF.f, AF.af);
