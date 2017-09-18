@@ -514,7 +514,7 @@ void DEC(uint8_t opcode) {
 	// TODO: Half carry
 }
 
-void JR(uint8_t opcode, uint8_t param1, uint8_t param2) {
+void JR(uint8_t opcode, uint8_t param1, uint8_t param2, uint8_t *skipPCInc) {
 	uint16_t address = param1 + (param2 << 8);
 	
 	switch(opcode) {
@@ -529,17 +529,17 @@ void JR(uint8_t opcode, uint8_t param1, uint8_t param2) {
 		case JR_n:
 			PC += (int8_t)param1; break;
 		case JP_NC_nn:
-			if(!getFlag(C)) { PC = address; }; break;
+			if(!getFlag(C)) { PC = address; *skipPCInc = 1; }; break;
 		case JP_NZ_nn:
-			if(!getFlag(Z)) { PC = address; }; break;
+			if(!getFlag(Z)) { PC = address; *skipPCInc = 1; }; break;
 		case JP_C_nn:
-			if(getFlag(C)) { PC = address; }; break;
+			if(getFlag(C)) { PC = address; *skipPCInc = 1; }; break;
 		case JP_Z_nn:
-			if(getFlag(Z)) { PC = address; }; break;
+			if(getFlag(Z)) { PC = address; *skipPCInc = 1; }; break;
 		case JP_nn:
-			PC = address; break;
+			PC = address; *skipPCInc = 1; break;
 		case JP_HL:
-			PC = ReadMem(HL.hl); break;
+			PC = ReadMem(HL.hl); *skipPCInc = 1; break;
 	}
 }
 void CALL(uint8_t opcode, uint8_t param1, uint8_t param2) {

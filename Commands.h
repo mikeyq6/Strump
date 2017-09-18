@@ -11,7 +11,7 @@ void CP(uint8_t opcode, uint8_t param);
 void LD(uint8_t opcode, uint8_t param, uint8_t param2);
 void DEC(uint8_t opcode);
 void INC(uint8_t opcode);
-void JR(uint8_t opcode, uint8_t param1, uint8_t param2);
+void JR(uint8_t opcode, uint8_t param1, uint8_t param2, uint8_t *skipPCInc);
 void CALL(uint8_t opcode, uint8_t param1, uint8_t param2);
 void RET_(uint8_t opcode);
 void DAA_();

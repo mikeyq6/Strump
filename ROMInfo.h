@@ -1,3 +1,10 @@
+#define NO_ROMBANK	0x00
+#define MBC1		0x01
+#define MBC2		0x02
+#define MBC3		0x04
+#define MBC5		0x08
+#define MM01		0x10
+
 typedef struct _cartridgeInfo {
 	char title[17];
 	uint8_t gbc;

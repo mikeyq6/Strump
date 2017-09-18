@@ -17,13 +17,6 @@
 #define I_Serial	0x58
 #define I_Joypad	0x60
 
-#define NO_ROMBANK	0x00
-#define MBC1		0x01
-#define MBC2		0x02
-#define MBC3		0x04
-#define MBC5		0x08
-#define MM01		0x10
-
 #define INTERNAL_ROM_SIZE 256
 #define CARTRIDGE_SIZE 0x200000
 

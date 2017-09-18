@@ -182,7 +182,11 @@ void Quit() {
 }
 
 short ShouldPrint() {
+#ifdef STEPTHROUGH
 	return (skip == 0 && skipuntil == 0) || STEPTHROUGH;
+#else
+	return 0;
+#endif
 }
  
 uint8_t getFlag(uint8_t flag) {
@@ -200,11 +204,15 @@ void resetFlag(uint8_t flag) {
 // Memory
 uint8_t ReadMem(uint16_t location) {
 	//printf("\nReadMem(%04x)\n", location);
+#ifdef STEPTHROUGH
 	if(location == LY && tempShow) { return 0x90; tempShow = 0; } // debug
+#else
+	if(location == LY) { return 0x90; }
+#endif
 	
 	if(location < 0x100 && Startup) {
 		return InternalRom[location];
-	} else if(location >= 0 && location <= 0x14c) {
+	} else if(location >= 0 && location <= 0x14d) {
 		return Cartridge[location];
 	} else if(location >= 0xe000 && location < 0xfe00) { // Allow for the mirrored internal RAM
 		return Memory[location - 0x2000];
@@ -223,7 +231,7 @@ void WriteMem(uint16_t location, uint8_t value) {
 		RamBank = value;
 	} else if(location >= 0xe000 && location < 0xfe00) { // Allow for the mirrored internal RAM
 		Memory[location - 0x2000] = value;
-	} else if(location == ENDSTART) {
+	} else if(location == ENDSTART) {;
 		Startup = 0;
 	} else {
 		Memory[location] = value;
@@ -582,7 +590,7 @@ void Run(uint8_t opcode, uint8_t param1, uint8_t param2) {
 		case JP_Z_nn:
 		case JP_nn:
 		case JP_HL:
-			JR(opcode, param1, param2); break;
+			JR(opcode, param1, param2, &skipPCInc); break;
 		case CALL_NZ_nn:
 		case CALL_NC_nn:
 		case CALL_C_nn:
@@ -605,6 +613,7 @@ void Run(uint8_t opcode, uint8_t param1, uint8_t param2) {
 		case RST_18H: 
 		case RST_28H:
 		case RST_38H:
+			skipPCInc = 1;
 			RST(opcode); break;
 		case DAA:
 			DAA_(); break;
