@@ -1,5 +1,6 @@
 #include <assert.h>
 #include "CPU.h"
+#include "Commands.h"
 #include "opcodes.h"
 
 void clearFlags();
