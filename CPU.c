@@ -15,7 +15,7 @@ void TestInstructions();
 #ifdef STEPTHROUGH 
 void DisplayState();
 int skip = 0;
-int skipuntil = 0x68;
+int skipuntil = 0;
 short tempShow = 1;
 #endif
 
@@ -323,7 +323,7 @@ void Start() {
 		}
 		
 #ifdef STEPTHROUGH
-		if(skip > 0) { 
+		debug_routine:if(skip > 0) { 
 			if(ShouldPrint()) {
 				DisplayState();
 			}
@@ -337,10 +337,21 @@ void Start() {
 			skipuntil = 0;
 			char x = _getch();
 			if(x == 'q') { break; }
-			else if(x == 's') { skip = 0xfff;}
+			else if(x == 's') { 
+				printf("Skip to address: ");
+				unsigned int input;
+				scanf_s("%x", &input);
+				skipuntil = (uint16_t)input;
+			}
+			else if(x == 'm') {
+				printf("Check memory at address: ");
+				unsigned int input;
+				scanf_s("%x", &input);
+				printf("Memory[%04x] = %02x\n\n", (uint16_t)input, Memory[(uint16_t)input]);
+				goto debug_routine;
+			}
 		}
 #endif
-		if(PC >= 0x100) { Startup = 0; }
 		
 		if(InterruptsEnabled) {
 			CheckInterrupts();
@@ -395,6 +406,8 @@ void WriteMem(uint16_t location, uint8_t value) {
 		RamBank = value;
 	} else if(location >= 0xe000 && location < 0xfe00) { // Allow for the mirrored internal RAM
 		Memory[location - 0x2000] = value;
+	} else if(location == ENDSTART) {
+		Startup = 0;
 	} else {
 		Memory[location] = value;
 	}
@@ -3669,7 +3682,7 @@ const char* CBCodeToString(uint8_t opcode) {
 
 #ifdef STEPTHROUGH
 void DisplayState() {
-	printf("Registers:\nAF: %02x%02x\tBC: %02x%02x\tZ N H C\nDE: %02x%02x\tHL: %02x%02x\t%x %x %x %x\nSP: %04x\tPC: %04x\nIF: %02x\tDIV: %02x\trDiv: %x\n",
+	printf("Registers:\nAF: %02x%02x\tBC: %02x%02x\tZ N H C\nDE: %02x%02x\tHL: %02x%02x\t%x %x %x %x\nSP: %04x\tPC: %04x\nIF: %02x\tDIV: %02x\trDiv: %x\n\n",
 		AF.a, AF.f, BC.b, BC.c, DE.d, DE.e, HL.h, HL.l, getFlag(Z), getFlag(N), getFlag(H), getFlag(C), SP, PC,
 		Memory[IF], Memory[DIV], rDiv);
 }

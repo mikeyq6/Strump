@@ -548,6 +548,7 @@
 #define OBP1		0xff49
 #define WY			0xff4a
 #define WX			0xff4b
+#define ENDSTART	0xff50
 #define IE			0xffff
 
 #endif

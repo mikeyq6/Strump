@@ -27,6 +27,11 @@
 #define INTERNAL_ROM_SIZE 256
 #define CARTRIDGE_SIZE 0x200000
 
+// If not Windows, then don't use scanf_s
+#ifndef _WIN32
+#define scanf_s scanf
+#endif
+
 uint8_t Memory[0x10000];
 uint8_t Cartridge[CARTRIDGE_SIZE];
 uint8_t Halted, Stopped, WillDisableInterrupts, WillEnableInterrupts, Startup, InterruptsEnabled;
