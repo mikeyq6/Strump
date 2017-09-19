@@ -25,11 +25,12 @@ int main(int argc, char* argv[]) {
 	_getch();
 	return 0;*/
 	initCPU();
+	drawInit(argc, argv);
 	SetCartridgeInfo();
 	DisplayCartridgeInfo();
 	_getch();
 
-	drawInit(argc, argv);
+	//
 	Start();
 	 
 	//printf("a=%u, f=%u, af=%u\n", AF.a, AF.f, AF.af);

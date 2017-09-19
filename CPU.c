@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include "Commands.h"
 #include "ROMInfo.h"
+#include "Draw.h"
 
 #include "CPU.h"
 #include "test.h"
@@ -19,6 +20,8 @@ void DisplayState();
 int skip = 0;
 int skipuntil = 0;
 short tempShow = 1;
+uint8_t bdata[BACKGROUNDTILES * 16];
+FILE *fp;
 #endif
 
 void readInitialProgram();
@@ -43,6 +46,9 @@ void initCPU() {
 	
 #ifdef STEPTHROUGH
 	InitCartridgeInfo();
+	for(int i=0; i<BACKGROUNDTILES * 16; i++) {
+		bdata[i] = 0;
+	}
 #endif
 	
 #ifdef RUNTESTS
@@ -140,6 +146,7 @@ void Start() {
 		}
 		
 #ifdef STEPTHROUGH
+
 		debug_routine:if(skip > 0) { 
 			if(ShouldPrint()) {
 				DisplayState();
@@ -165,6 +172,33 @@ void Start() {
 				unsigned int input;
 				scanf_s("%x", &input);
 				printf("Memory[%04x] = %02x\n\n", (uint16_t)input, Memory[(uint16_t)input]);
+				goto debug_routine;
+			}
+			else if(x == 'd') {
+				// Dump tile data to file
+				int err = fopen_s(&fp, "FrameData.bin", "w");
+				fwrite(&Memory[0x8000], sizeof(uint8_t), sizeof(uint8_t) * 0x1fff, fp);
+				// for(int i=0x8000; i< 0x9000; i++) {
+					// fprintf(fp, "%x", memory[i]);
+				// }
+				fclose(fp);
+				goto debug_routine;
+			}
+			else if(x == 'b') {
+				// Dump background
+				loadBackground();
+				for(int i=0; i<10; i++) {
+					for(int j=0; j<16; j++) {
+						//printf("background[%02x]->data[%02x] = %02x\n",i , j, background[i]->data[j]);
+						bdata[(i * 16) + j] = background[i]->data[j];
+					}
+				}
+				int err = fopen_s(&fp, "Background.bin", "w");
+				fwrite(bdata, sizeof(uint8_t), sizeof(uint8_t) * (BACKGROUNDTILES * 16), fp);
+				// for(int i=0x8000; i< 0x9000; i++) {
+					// fprintf(fp, "%x", memory[i]);
+				// }
+				fclose(fp);
 				goto debug_routine;
 			}
 		}
@@ -2161,6 +2195,16 @@ const char* CBCodeToString(uint8_t opcode) {
 
 	}
 	return name;
+}
+
+// LCDC
+uint16_t GetBackgroundTileMapLocation() {
+	uint8_t val = Memory[LCDC];
+	return (((val & (1 << 3)) == 0) ? 0x9800 : 0x9c00);
+}
+uint16_t BGWindowTileLocation() {
+	uint8_t val = Memory[LCDC];
+	return (((val & (1 << 4)) == 0) ? 0x8800 : 0x8000);
 }
 
 #ifdef STEPTHROUGH

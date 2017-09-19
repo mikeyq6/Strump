@@ -9,12 +9,6 @@
 
 #include "Draw.h"
 
-typedef struct _tile {
-	uint8_t data[16];
-} tile;
-
-tile *background[BACKGROUNDTILES];
-
 extern FILE * __cdecl __iob_func(void)
 {	
 	FILE _iob[] = {*stdin, *stdout, *stderr};
@@ -22,14 +16,14 @@ extern FILE * __cdecl __iob_func(void)
 }
 
 void displayMe(void);
-uint8_t getPixel(tile *t, uint8_t row, uint8_t col, uint8_t *val);
+void getPixel(tile *t, uint8_t row, uint8_t col, uint8_t *val);
 void getTileAt(uint16_t address, tile *t);
 
 void drawInit(int argc, char* argv[]) {
 	for(int i=0; i<BACKGROUNDTILES; i++) {
 		background[i] = malloc(sizeof(tile));
 	}
-	//
+	/*
 	glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
 	glEnable(GL_DEPTH_TEST);
@@ -42,7 +36,7 @@ void drawInit(int argc, char* argv[]) {
 	glLoadIdentity (); 
 	glClearColor(248,248,248,0);
 	//gluPerspective(30.0, 1.5, 0.1, 10.0);
-    glutMainLoopEvent();
+    glutMainLoopEvent();*/
 }
 
 
@@ -114,24 +108,41 @@ void displayMe(void)
 }
  
 void loadBackground() {
+	// Get wchich tile set to use
+	uint16_t bMap = GetBackgroundTileMapLocation();
 	// Draw some tiles, because why the hell not?
-	uint16_t address = 0x8000;
-	for(int i=0; i<0xff; i++) {
-		getTileAt(address + i, background[i]);
+	uint16_t address = BGWindowTileLocation();
+	uint16_t offset = 16;
+	uint8_t tileNum;
+	printf("bMap=%04x, address=%04x\n", bMap, address);
+		
+	for(int i=0; i<BACKGROUNDTILES; i++) {
+		tileNum = Memory[bMap + i];
+		//printf("tileNum=%02x\n", Memory[bMap + i]);
+		if(address == 0x8800) { // allow for negative numbers
+			getTileAt((offset * (int8_t)tileNum) + address, background[i]);
+		} else {
+			getTileAt((offset * tileNum) + address, background[i]);
+			if(tileNum > 0) {
+				printf("address=%04x\n", (offset * tileNum) + address);
+				printf("t->data[0]=%02x\n", background[i]->data[0]);
+			}
+		}
 	}
 }
 
-uint8_t getPixel(tile *t, uint8_t row, uint8_t col, uint8_t *val) {
+void getPixel(tile *t, uint8_t row, uint8_t col, uint8_t *val) {
 	uint8_t bit = 1 << (8 - (col + 1));
 	//printf("bit=%x, ", bit);
 	uint8_t rIndex = (row * 2) - 1;
-	//printf("t->data[%u] = %x, t->data[%u + 1] = %x\n", rIndex, t->data[rIndex], rIndex, t->data[rIndex+1]);
+	printf("t->data[%u] = %x, t->data[%u + 1] = %x\n", rIndex, t->data[rIndex], rIndex, t->data[rIndex+1]);
 	*val = ((t->data[rIndex] & bit) ? 1 : 0) + (((t->data[rIndex + 1]) & bit) ? 2 : 0);
 }
 void getTileAt(uint16_t address, tile *t) {
+	//printf("address=%04x\n", address);
 	for(int i=0; i<16; i++) {
 		t->data[i] = ReadMem(address + i);
-		printf("row[%u] = %x, ReadMem(%02x) = %x\n", i, t->data[i], address + i, ReadMem(address + i));
+		//printf("row[%u] = %x, ReadMem(%02x) = %x\n", i, t->data[i], address + i, ReadMem(address + i));
 	}
 	
 	uint8_t val = 0;
@@ -140,6 +151,6 @@ void getTileAt(uint16_t address, tile *t) {
 			getPixel(t, i, j, &val);
 			printf("%u", val);
 		}
-		printf("\n");
+		//printf("\n");
 	}
 }

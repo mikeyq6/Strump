@@ -89,6 +89,9 @@ uint8_t GetNextInstruction();
 void Run(uint8_t opcode, uint8_t param1, uint8_t param2);
 void RunCBInstruction(uint8_t opcode);
 
+// LCDC 
+uint16_t GetBackgroundTileMapLocation();
+uint16_t BGWindowTileLocation();
 
 
 const char* CodeToString(uint8_t opcode);

@@ -1299,15 +1299,16 @@ void PUSH(uint8_t opcode) {
 	}
 }
 void POP(uint8_t opcode) {
+	SP++;
 	switch(opcode) {
 		case POP_AF:
-			AF.f = ReadMem(SP); AF.a = ReadMem(SP+1); SP += 2; break;
+			AF.a = ReadMem(SP); AF.f = ReadMem(SP+1); SP++; break;
 		case POP_DE:
-			DE.e = ReadMem(SP); DE.d = ReadMem(SP+1); SP += 2; break;
+			DE.d = ReadMem(SP); DE.e = ReadMem(SP+1); SP++; break;
 		case POP_BC:
-			BC.c = ReadMem(SP); BC.b = ReadMem(SP+1); SP += 2; break;
+			BC.b = ReadMem(SP); BC.c = ReadMem(SP+1); SP++; break;
 		case POP_HL:
-			HL.l = ReadMem(SP); HL.h = ReadMem(SP+1); SP += 2; break;
+			HL.h = ReadMem(SP); HL.l = ReadMem(SP+1); SP++; break;
 	}
 }
  
