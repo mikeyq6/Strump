@@ -187,7 +187,7 @@ void Start() {
 			else if(x == 'b') {
 				// Dump background
 				loadBackground();
-				for(int i=0; i<10; i++) {
+				for(int i=0; i<BACKGROUNDTILES; i++) {
 					for(int j=0; j<16; j++) {
 						//printf("background[%02x]->data[%02x] = %02x\n",i , j, background[i]->data[j]);
 						bdata[(i * 16) + j] = background[i]->data[j];
