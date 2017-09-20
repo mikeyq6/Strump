@@ -114,7 +114,7 @@ void loadBackground() {
 	uint16_t address = BGWindowTileLocation();
 	uint16_t offset = 16;
 	uint8_t tileNum;
-	printf("bMap=%04x, address=%04x\n", bMap, address);
+	//printf("bMap=%04x, address=%04x\n", bMap, address);
 		
 	for(int i=0; i<BACKGROUNDTILES; i++) {
 		tileNum = Memory[bMap + i];
@@ -124,8 +124,12 @@ void loadBackground() {
 		} else {
 			getTileAt((offset * tileNum) + address, background[i]);
 			if(tileNum > 0) {
-				printf("address=%04x\n", (offset * tileNum) + address);
-				printf("t->data[0]=%02x\n", background[i]->data[0]);
+				//printf("address=%04x\n", (offset * tileNum) + address);
+				/*printf("Tile data: ");
+				for(int k=0; k<16; k++) {
+					printf("%02x ", background[i]->data[k]);
+				}
+				printf("\n");*/
 			}
 		}
 	}
@@ -134,8 +138,9 @@ void loadBackground() {
 void getPixel(tile *t, uint8_t row, uint8_t col, uint8_t *val) {
 	uint8_t bit = 1 << (8 - (col + 1));
 	//printf("bit=%x, ", bit);
-	uint8_t rIndex = (row * 2) - 1;
-	printf("t->data[%u] = %x, t->data[%u + 1] = %x\n", rIndex, t->data[rIndex], rIndex, t->data[rIndex+1]);
+	uint8_t rIndex = (row * 2);
+	//printf("row=%u, col=%u, rIndex=%u, bit=%x\n", row, col, rIndex, bit);
+	//printf("t->data[%u] = %x, t->data[%u + 1] = %x\n", rIndex, t->data[rIndex], rIndex, t->data[rIndex+1]);
 	*val = ((t->data[rIndex] & bit) ? 1 : 0) + (((t->data[rIndex + 1]) & bit) ? 2 : 0);
 }
 void getTileAt(uint16_t address, tile *t) {
@@ -144,13 +149,26 @@ void getTileAt(uint16_t address, tile *t) {
 		t->data[i] = ReadMem(address + i);
 		//printf("row[%u] = %x, ReadMem(%02x) = %x\n", i, t->data[i], address + i, ReadMem(address + i));
 	}
-	
+	/*
 	uint8_t val = 0;
-	for(int i=0; i<8; i++) {
-		for(int j=0; j<8; j++) {
-			getPixel(t, i, j, &val);
-			printf("%u", val);
+	if(address != 0x8000) {
+		printf("Tile data: ");
+		for(int k=0; k<16; k++) {
+			printf("%02x ", t->data[k]);
 		}
-		//printf("\n");
+		printf("\n");
+		for(int i=0; i<8; i++) {
+			for(int j=0; j<8; j++) {
+				getPixel(t, i, j, &val);
+				if(val > 0) {
+					printf("%u", val);
+				} else {
+					printf(" ");
+				}
+			}
+			printf("\n");
+		}
+		printf("\n");
 	}
+	*/
 }
