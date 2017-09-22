@@ -10,6 +10,7 @@
 #define C 16
 
 #define FREQ 4194304
+#define SCOUNTER_HZ 5000
 
 #define I_VBlank 	0x40
 #define I_LCDC 		0x48
@@ -19,6 +20,11 @@
 
 #define INTERNAL_ROM_SIZE 256
 #define CARTRIDGE_SIZE 0x200000
+
+#define WHITE		0x00ffffff
+#define LT_GRAY		0x00555555
+#define DK_GRAY		0x00cccccc
+#define BLACK		0x00000000
 
 // If not Windows, then don't use scanf_s
 #ifndef _WIN32
@@ -63,6 +69,7 @@ register union {
 register uint16_t SP;
 register uint16_t PC;
 register uint16_t rDiv;
+register uint32_t sCounter;
 
 // Init
 void initCPU();
@@ -92,6 +99,7 @@ void RunCBInstruction(uint8_t opcode);
 // LCDC 
 uint16_t GetBackgroundTileMapLocation();
 uint16_t BGWindowTileLocation();
+uint32_t GetColourFor(uint8_t number);
 
 
 const char* CodeToString(uint8_t opcode);
