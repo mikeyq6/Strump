@@ -982,7 +982,7 @@ uint8_t GetNextInstruction() {
 	uint8_t inst = 0;
 	
 	if(PC >= 0x4000 && PC <= 0x7fff) {
-		uint16_t address = ((RomBank - 1) * 0x4000) + 0x4000;
+		uint16_t address = ((RomBank - 1) * 0x4000) + PC;
 		inst = Cartridge[address];
 		// if(!Startup) {
 			// printf("Getting instruction from RomBank(%x), address(%04x) = %02x\n", RomBank, address, inst);
@@ -1320,8 +1320,8 @@ uint32_t GetColourForPaletteNumber(uint8_t pNumber) {
 
 #ifdef STEPTHROUGH
 void DisplayState() {
-	printf("Registers:\nAF: %02x%02x\tBC: %02x%02x\tZ N H C\nDE: %02x%02x\tHL: %02x%02x\t%x %x %x %x\nSP: %04x\tPC: %04x\nIF: %02x\tLY: %02x\tLYC: %02x\tSTAT: %02x\tDIV: %02x\trDiv: %x\n\n",
+	printf("Registers:\nAF: %02x%02x\tBC: %02x%02x\tZ N H C\nDE: %02x%02x\tHL: %02x%02x\t%x %x %x %x\nSP: %04x\tPC: %04x\nIF: %02x\tLY: %02x\tLYC: %02x\tSTAT: %02x\tRomBank: %02x\tDIV: %02x\trDiv: %x\n\n",
 		AF.a, AF.f, BC.b, BC.c, DE.d, DE.e, HL.h, HL.l, getFlag(Z), getFlag(N), getFlag(H), getFlag(C), SP, PC,
-		Memory[IF], Memory[LY], Memory[LYC], Memory[STAT], Memory[DIV], rDiv);
+		Memory[IF], Memory[LY], Memory[LYC], Memory[STAT], RomBank, Memory[DIV], rDiv);
 }
 #endif
