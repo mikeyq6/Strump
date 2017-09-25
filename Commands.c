@@ -565,7 +565,7 @@ void CALL(uint8_t opcode, uint8_t param1, uint8_t param2) {
 	}
 	
 	if(doCall) {
-		uint16_t next = PC + 1;
+		uint16_t next = PC + 2;
 		Memory[SP] = (uint8_t)(next >> 8); SP--;
 		Memory[SP] = (uint8_t)(next & 0xff); SP--;
 		PC = address;
