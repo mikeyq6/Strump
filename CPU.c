@@ -129,18 +129,18 @@ void Start() {
 #ifdef STEPTHROUGH
 			if(ShouldPrint()) { 
 				if(inst == CB) {
-					printf(CodeToString(inst), CBCodeToString(InternalRom[PC+1]));
+					printf(CodeToString(inst), CBCodeToString((Startup ? InternalRom[PC+1] : Cartridge[PC+1])));
 				} else {
-					printf(CodeToString(inst), InternalRom[PC+1]);
+					printf(CodeToString(inst), (Startup ? InternalRom[PC+1] : Cartridge[PC+1]));
 				}
 			}
 #endif
-			Run(inst, InternalRom[PC+1], 0);
+			Run(inst, (Startup ? InternalRom[PC+1] : Cartridge[PC+1]), 0);
 		} else if(params == 2) {
 #ifdef STEPTHROUGH
-			if(ShouldPrint()) { printf(CodeToString(inst), InternalRom[PC+1], InternalRom[PC+2]); }
+			if(ShouldPrint()) { printf(CodeToString(inst), (Startup ? InternalRom[PC+1] : Cartridge[PC+1]), (Startup ? InternalRom[PC+2] : Cartridge[PC+2])); }
 #endif
-			Run(inst, InternalRom[PC+1], InternalRom[PC+2]);
+			Run(inst, (Startup ? InternalRom[PC+1] : Cartridge[PC+1]), (Startup ? InternalRom[PC+2] : Cartridge[PC+2]));
 		}
 		if(ShouldPrint()) { 
 			printf("\n");
@@ -242,11 +242,12 @@ void resetFlag(uint8_t flag) {
 // Memory
 uint8_t ReadMem(uint16_t location) {
 	//printf("\nReadMem(%04x)\n", location);
-#ifdef STEPTHROUGH
-	if(location == LY && tempShow) { return 0x90; tempShow = 0; } // debug
-#else
-	if(location == LY) { return 0x90; }
-#endif
+// #ifdef STEPTHROUGH
+	// if(location == LY && tempShow) { return 0x90; tempShow = 0; } // debug
+// #else
+	// 
+// #endif
+	if(location == LY) { return (Startup ? 0x90 : 0x91); }
 	
 	if(location < 0x100 && Startup) {
 		return InternalRom[location];
@@ -980,9 +981,16 @@ uint8_t GetNextInstruction() {
 	uint8_t inst = 0;
 	
 	if(PC >= 0x4000 && PC <= 0x7fff) {
-		inst = Cartridge[((RomBank - 1) * 0x4000) + 0x4000];
+		uint16_t address = ((RomBank - 1) * 0x4000) + 0x4000;
+		inst = Cartridge[address];
+		// if(!Startup) {
+			// printf("Getting instruction from RomBank(%x), address(%04x) = %02x\n", RomBank, address, inst);
+		// }
 	} else {
 		inst = Startup ? InternalRom[PC] : Cartridge[PC];
+		// if(!Startup) {
+			// printf("Getting instruction from address(%04x) = %02x\n", PC, inst);
+		// }
 	}
 	return inst;
 }
@@ -2223,6 +2231,7 @@ uint32_t GetColourFor(uint8_t number) {
 		case 3:
 			return GetColourForPaletteNumber((palette & 0xc0) >> 6); break;
 	}
+	return WHITE;
 }
 uint32_t GetColourForPaletteNumber(uint8_t pNumber) {
 	switch(pNumber) {
@@ -2235,6 +2244,7 @@ uint32_t GetColourForPaletteNumber(uint8_t pNumber) {
 		case 3:
 			return BLACK; break;			
 	}
+	return WHITE;
 }
 
 #ifdef STEPTHROUGH

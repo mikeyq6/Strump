@@ -527,6 +527,7 @@ void JR(uint8_t opcode, uint8_t param1, uint8_t param2, uint8_t *skipPCInc) {
 		case JR_C_n:
 			if(getFlag(C)) { PC += (int8_t)param1; }; break;
 		case JR_n:
+			//printf("before: PC = %04x, param1=%02x\n", PC, param1);
 			PC += (int8_t)param1; break;
 		case JP_NC_nn:
 			if(!getFlag(C)) { PC = address; *skipPCInc = 1; }; break;
@@ -537,6 +538,7 @@ void JR(uint8_t opcode, uint8_t param1, uint8_t param2, uint8_t *skipPCInc) {
 		case JP_Z_nn:
 			if(getFlag(Z)) { PC = address; *skipPCInc = 1; }; break;
 		case JP_nn:
+			//printf("param1=%02x, param2=%02x, address=%04x\n", param1, param2, address);
 			PC = address; *skipPCInc = 1; break;
 		case JP_HL:
 			PC = ReadMem(HL.hl); *skipPCInc = 1; break;

@@ -179,7 +179,6 @@ void setBackgroundPixels() {
 	uint8_t sY = Memory[SCY];
 	tile *cur;
 	uint8_t pixel;
-	uint32_t sPixel;
 	int sPixelsIndex = 0;
 	
 	// Which tile to start with
