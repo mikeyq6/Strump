@@ -1,5 +1,8 @@
 #include "alias.h"
 
+const char* CodeToString(uint8_t opcode);
+const char* CBCodeToString(uint8_t opcode);
+
 void XOR(uint8_t opcode, uint8_t param);
 void OR(uint8_t opcode, uint8_t param);
 void AND(uint8_t opcode, uint8_t param);

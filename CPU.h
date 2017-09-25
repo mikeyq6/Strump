@@ -26,6 +26,15 @@
 #define DK_GRAY		0x00cccccc
 #define BLACK		0x00000000
 
+#define BIT0		0x01
+#define BIT1		0x02
+#define BIT2		0x04
+#define BIT3		0x08
+#define BIT4		0x10
+#define BIT5		0x20
+#define BIT6		0x40
+#define BIT7		0x80
+
 // If not Windows, then don't use scanf_s
 #ifndef _WIN32
 #define scanf_s scanf
@@ -69,7 +78,7 @@ register union {
 register uint16_t SP;
 register uint16_t PC;
 register uint16_t rDiv;
-register uint32_t sCounter;
+register int32_t sCounter;
 
 // Init
 void initCPU();
@@ -100,9 +109,8 @@ void RunCBInstruction(uint8_t opcode);
 uint16_t GetBackgroundTileMapLocation();
 uint16_t BGWindowTileLocation();
 uint32_t GetColourFor(uint8_t number);
+uint8_t IsLCDEnabled();
+void SetLCDStatus();
 
-
-const char* CodeToString(uint8_t opcode);
-const char* CBCodeToString(uint8_t opcode);
 
 #endif /* CPU_H */
