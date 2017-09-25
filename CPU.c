@@ -27,7 +27,7 @@ FILE *fp;
 void readInitialProgram();
 void setDefaults();
 void runInitialProgram();
-short GetParameters(uint8_t opcode);
+short GetParameters(uint8_t opcode, uint8_t *param1, uint8_t *param2);
 uint8_t GetCycles(uint8_t opcode);
 short ShouldPrint();
 void PushPCOntoStack();
@@ -101,6 +101,8 @@ void setDefaults() {
 void Start() {
 	//readInitialProgram();
 	//runInitialProgram();
+	uint8_t param1 = 0;
+	uint8_t param2 = 0;
 	setDefaults();
 	
 #ifdef DEBUG_TIMER
@@ -110,7 +112,7 @@ void Start() {
 
 	for(;;) {
 		uint8_t inst = GetNextInstruction();
-		short params = GetParameters(inst);
+		short params = GetParameters(inst, &param1, &param2);
 		if(WillEnableInterrupts) {
 			WillEnableInterrupts = 0;
 			InterruptsEnabled = 1;
@@ -130,18 +132,18 @@ void Start() {
 #ifdef STEPTHROUGH
 			if(ShouldPrint()) { 
 				if(inst == CB) {
-					printf(CodeToString(inst), CBCodeToString((Startup ? InternalRom[PC+1] : Cartridge[PC+1])));
+					printf(CodeToString(inst), CBCodeToString(param1));
 				} else {
-					printf(CodeToString(inst), (Startup ? InternalRom[PC+1] : Cartridge[PC+1]));
+					printf(CodeToString(inst), param1);
 				}
 			}
 #endif
 			Run(inst, (Startup ? InternalRom[PC+1] : Cartridge[PC+1]), 0);
 		} else if(params == 2) {
 #ifdef STEPTHROUGH
-			if(ShouldPrint()) { printf(CodeToString(inst), (Startup ? InternalRom[PC+1] : Cartridge[PC+1]), (Startup ? InternalRom[PC+2] : Cartridge[PC+2])); }
+			if(ShouldPrint()) { printf(CodeToString(inst), param1, param2); }
 #endif
-			Run(inst, (Startup ? InternalRom[PC+1] : Cartridge[PC+1]), (Startup ? InternalRom[PC+2] : Cartridge[PC+2]));
+			Run(inst, param1, param2);
 		}
 		if(ShouldPrint()) { 
 			printf("\n");
@@ -401,6 +403,7 @@ static void PushPCOntoStack() {
 // Instructions 
 void Run(uint8_t opcode, uint8_t param1, uint8_t param2) {
 	uint8_t skipPCInc = 0;
+	uint8_t p1, p2;
 	
 	switch(opcode) {
 		case CB:
@@ -684,7 +687,7 @@ void Run(uint8_t opcode, uint8_t param1, uint8_t param2) {
 			//printf("instruction [%x] [%x] [%x] not implemented\n", opcode, param1, param2);
 	}
 	if(skipPCInc) { skipPCInc = 0;}
-	else { PC += (1 + GetParameters(opcode)); }
+	else { PC += (1 + GetParameters(opcode, &p1, &p2)); }
 }
 void RunCBInstruction(uint8_t opcode) {
 	switch(opcode) {
@@ -981,23 +984,25 @@ void RunCBInstruction(uint8_t opcode) {
 uint8_t GetNextInstruction() {
 	uint8_t inst = 0;
 	
-	if(PC >= 0x4000 && PC <= 0x7fff) {
-		uint16_t address = ((RomBank - 1) * 0x4000) + PC;
-		inst = Cartridge[address];
-		// if(!Startup) {
-			// printf("Getting instruction from RomBank(%x), address(%04x) = %02x\n", RomBank, address, inst);
-		// }
+	return GetValueAt(PC);
+}
+
+uint8_t GetValueAt(uint16_t address) {
+	uint8_t val = 0;
+	
+	if(address >= 0x4000 && address <= 0x7fff) {
+		address += ((RomBank - 1) * 0x4000);
+		val = Cartridge[address];
 	} else {
-		inst = Startup ? InternalRom[PC] : Cartridge[PC];
-		// if(!Startup) {
-			// printf("Getting instruction from address(%04x) = %02x\n", PC, inst);
-		// }
+		val = Startup ? InternalRom[address] : Cartridge[address];
 	}
-	return inst;
+	
+	//printf("address=%04x, val=%02x\n", address, val);
+	return val;
 }
 
  // Figure out how many paramters the given instruction requires
-short GetParameters(uint8_t opcode) {
+short GetParameters(uint8_t opcode, uint8_t *param1, uint8_t *param2) {
 	short numParams = 0;
 
 	switch(opcode) {
@@ -1027,6 +1032,7 @@ short GetParameters(uint8_t opcode) {
 		case ADD_A_n:
 		case LDH_n_A:
 		case LDH_A_n:
+			*param1 = GetValueAt(PC+1);
 			numParams = 1; break;
 		case LD_BC_nn:
 		case LD_DE_nn:
@@ -1045,6 +1051,9 @@ short GetParameters(uint8_t opcode) {
 		case CALL_Z_nn:
 		case CALL_C_nn:
 		case CALL_nn:
+			*param1 = GetValueAt(PC+1);
+			*param2 = GetValueAt(PC+2);
+			//printf("param1=%02x, param2=%02x, PC=%04x, PC+1=%04x, PC+2=%04x\n", *param1, *param2, PC, PC+1, PC+2);
 			numParams = 2; break;
 			
 	}

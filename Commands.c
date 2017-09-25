@@ -535,6 +535,7 @@ void JR(uint8_t opcode, uint8_t param1, uint8_t param2, uint8_t *skipPCInc) {
 		case JP_NZ_nn:
 			if(!getFlag(Z)) { PC = address; *skipPCInc = 1; }; break;
 		case JP_C_nn:
+			printf("JP C: address=%04x\n", address);
 			if(getFlag(C)) { PC = address; *skipPCInc = 1; }; break;
 		case JP_Z_nn:
 			if(getFlag(Z)) { PC = address; *skipPCInc = 1; }; break;
