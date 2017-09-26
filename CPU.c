@@ -204,6 +204,12 @@ void Start() {
 				// }
 				fclose(fp);
 				goto debug_routine;
+			} else if(x == 'c') {
+				printf("Check cartridge ROM at address: ");
+				unsigned int input;
+				scanf_s("%x", &input);
+				printf("Cartridge[%05x] = %02x\n\n", (uint16_t)input, Cartridge[input]);
+				goto debug_routine;
 			}
 		}
 #endif
@@ -271,6 +277,7 @@ void WriteMem(uint16_t location, uint8_t value) {
 		RamBank = value;
 	} else if(location >= 0xe000 && location < 0xfe00) { // Allow for the mirrored internal RAM
 		Memory[location - 0x2000] = value;
+		Memory[location] = value;
 	} else if(location == ENDSTART) {;
 		Startup = 0;
 	} else if(location == LY) {
@@ -989,10 +996,17 @@ uint8_t GetNextInstruction() {
 
 uint8_t GetValueAt(uint16_t address) {
 	uint8_t val = 0;
+	uint32_t nAddress = 0;
 	
 	if(address >= 0x4000 && address <= 0x7fff) {
-		address += ((RomBank - 1) * 0x4000);
+		if(RomBank == 0x13) {
+			printf("address=%04x, newAddress=%x\n", address, address + ((RomBank - 1) * 0x4000));
+		}
+		nAddress = address + ((RomBank - 1) * 0x4000);
 		val = Cartridge[address];
+		if(RomBank == 0x13) {
+			printf("address=%x, val=%02x\n", address, val);
+		}
 	} else {
 		val = Startup ? InternalRom[address] : Cartridge[address];
 	}
