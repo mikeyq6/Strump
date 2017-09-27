@@ -27,7 +27,7 @@ void clearFlags();
 	assert(AF.a == 16);
 	assert(getFlag(Z) == 0);
 	
-	HL.hl = 0x6000;
+	HL.hl = 0x8001;
 	WriteMem(HL.hl, 48);
 	XOR(XOR_HL, 0);
 	assert(AF.a == 32);
@@ -103,6 +103,17 @@ void clearFlags();
 	assert(HL.h == 0x35);
 	assert(getFlag(C) == 1);
 	
+	SP = 0x1000;
+	BC.bc = 0xabcd;
+	PUSH(PUSH_BC);
+	assert(SP == 0x0ffe);
+	assert(Memory[SP + 1] == 0xab);
+	assert(Memory[SP + 2] == 0xcd);
+	BC.bc = 0;
+	POP(POP_BC);
+	assert(SP == 0x1000);
+	assert(BC.bc == 0xabcd);
+	
 	HL.h = 0x9a;
 	resetFlag(C);
 	RL(RL_H);
@@ -130,6 +141,48 @@ void clearFlags();
 	DAA_();
 	assert(AF.a == 0x57);
 		
+	clearFlags();
+	AF.a = 0xa1;
+	RLA_();
+	assert(getFlag(C) == 1);
+	assert(AF.a == 0x42);
+	RLA_();
+	assert(getFlag(C) == 0);
+	assert(AF.a == 0x85);
+	
+	clearFlags();
+	BC.c = 0x42;
+	LD(LD_C_n, 0x5a, 0);
+	assert(BC.c == 0x5a);
+	
+	AF.a = 0x09;
+	Memory[0x8001] = 0x76;
+	DE.de = 0x8001;
+	LD(LD_A_DE, 0, 0);
+	assert(AF.a == 0x76);
+	
+	BC.b = 0x42;
+	LD(LD_B_n, 0x5a, 0);
+	assert(BC.b == 0x5a);
+	
+	// CP
+	clearFlags();
+	AF.a = 0x65;
+	CP(CP_n, 0x3);
+	assert(getFlag(Z) == 0);
+	assert(getFlag(C) == 0);
+	
+	clearFlags();
+	AF.a = 0x6a;
+	CP(CP_n, 0x6a);
+	assert(getFlag(Z) == 1);
+	assert(getFlag(C) == 0);
+	
+	clearFlags();
+	AF.a = 0x6;
+	CP(CP_n, 0x30);
+	assert(getFlag(Z) == 0);
+	assert(getFlag(C) == 1);
  }
  
  void clearFlags() {

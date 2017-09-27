@@ -1236,6 +1236,7 @@ void CP(uint8_t opcode, uint8_t param) {
 	resetFlag(N);
 	resetFlag(H);
 	uint8_t val = 0, res = 0;
+	uint8_t oldA = AF.a;
 	
 	switch(opcode) {
 		case CP_A:
@@ -1261,10 +1262,10 @@ void CP(uint8_t opcode, uint8_t param) {
 	if(res == 0) { setFlag(Z); }
 	
 	// Half carry and full carry
-	if((res & 0xf) - (val & 0xf) < 0) {
+	if((oldA & 0xf) - (val & 0xf) < 0) {
 		setFlag(H);
 	}
-	if(((res >> 4) & 0xf) - ((val >> 4) & 0xf) < 0) {
+	if(((oldA >> 4) & 0xf) - ((val >> 4) & 0xf) < 0) {
 		setFlag(C);
 	}
 }
