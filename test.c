@@ -70,11 +70,45 @@ void clearFlags();
 	assert(AF.a == 0);
 	assert(getFlag(Z) == 1);
 	
+	AF.a = 0x06;
+	HL.hl = 0x8003;
+	Memory[0x8003] = 0x1a;
+	ADD(ADD_A_HL, 0);
+	assert(AF.a = 0x20);
+	
+	HL.hl = 0x1000;
+	BC.bc = 0x1000;
+	ADD(ADD_HL_BC, 0);
+	assert(HL.hl == 0x2000);
+	assert(getFlag(N) == 0);
+	assert(getFlag(H) == 0);
+	assert(getFlag(C) == 0);
+	
+	HL.hl = 0xffff;
+	BC.bc = 0x0001;
+	ADD(ADD_HL_BC, 0);
+	assert(HL.hl == 0x0);
+	assert(getFlag(N) == 0);
+	assert(getFlag(H) == 1);
+	assert(getFlag(C) == 1);
+	
 	// OR
 	AF.a = 5; // 0101
 	BC.b = 9; // 1001
 	OR(OR_B, 0);
 	assert(AF.a == 13); // 1101
+	assert(getFlag(Z) == 0);
+	
+	AF.a = 0x42;
+	BC.c = 0xc3;
+	OR(OR_C, 0);
+	assert(AF.a == 0xc3);
+	assert(getFlag(Z) == 0);
+	
+	AF.a = 0x4a;
+	BC.c = 0xc3;
+	OR(OR_C, 0);
+	assert(AF.a == 0xcb);
 	assert(getFlag(Z) == 0);
 	
 	AF.a = 0;
@@ -89,19 +123,17 @@ void clearFlags();
 	assert(AF.a == 0x49);
 	assert(getFlag(Z) == 0);
 	
+	// PUSH/POP
 	AF.af = 0x2450;
-	SP = 0x5000;
-	uint16_t oldSP = SP;
+	SP = 0x5010;
 	PUSH(PUSH_AF);
-	assert(SP != oldSP);
+	assert(SP == 0x500e);
+	assert(Memory[SP + 1] == 0x24);
+	assert(Memory[SP + 2] == 0x50);
+	AF.af = 0;
 	POP(POP_AF);
-	assert(SP == oldSP);
-	
-	HL.h = 0x9a;
-	resetFlag(C);
-	RLC(RLC_H);
-	assert(HL.h == 0x35);
-	assert(getFlag(C) == 1);
+	assert(SP == 0x5010);
+	assert(AF.af == 0x2450);
 	
 	SP = 0x1000;
 	BC.bc = 0xabcd;
@@ -113,6 +145,35 @@ void clearFlags();
 	POP(POP_BC);
 	assert(SP == 0x1000);
 	assert(BC.bc == 0xabcd);
+	
+	SP = 0x1000;
+	DE.de = 0xabcd;
+	PUSH(PUSH_DE);
+	assert(SP == 0x0ffe);
+	assert(Memory[SP + 1] == 0xab);
+	assert(Memory[SP + 2] == 0xcd);
+	DE.de = 0;
+	POP(POP_DE);
+	assert(SP == 0x1000);
+	assert(DE.de == 0xabcd);
+	
+	SP = 0x1000;
+	HL.hl = 0xabcd;
+	PUSH(PUSH_HL);
+	assert(SP == 0x0ffe);
+	assert(Memory[SP + 1] == 0xab);
+	assert(Memory[SP + 2] == 0xcd);
+	HL.hl = 0;
+	POP(POP_HL);
+	assert(SP == 0x1000);
+	assert(HL.hl == 0xabcd);
+	
+	// RLC
+	HL.h = 0x9a;
+	resetFlag(C);
+	RLC(RLC_H);
+	assert(HL.h == 0x35);
+	assert(getFlag(C) == 1);
 	
 	HL.h = 0x9a;
 	resetFlag(C);
@@ -131,6 +192,7 @@ void clearFlags();
 	DAA_();
 	assert(AF.a == 0x42);
 	
+	// SUB
 	clearFlags();
 	AF.a = 0x72;
 	BC.c = 0x15;
@@ -140,7 +202,26 @@ void clearFlags();
 	assert(getFlag(C) == 0);
 	DAA_();
 	assert(AF.a == 0x57);
-		
+	
+	clearFlags();
+	AF.a = 0x82;
+	BC.b = 0x01;
+	SUB(SUB_B, 0);
+	assert(AF.a == 0x81);
+	assert(getFlag(H) == 0);
+	assert(getFlag(C) == 0);
+	assert(getFlag(Z) == 0);
+	
+	clearFlags();
+	AF.a = 0x82;
+	BC.b = 0x82;
+	SUB(SUB_B, 0);
+	assert(AF.a == 0x00);
+	assert(getFlag(H) == 0);
+	assert(getFlag(C) == 0);
+	assert(getFlag(Z) == 1);
+	
+	// RLA
 	clearFlags();
 	AF.a = 0xa1;
 	RLA_();
@@ -150,7 +231,24 @@ void clearFlags();
 	assert(getFlag(C) == 0);
 	assert(AF.a == 0x85);
 	
+	// LD
 	clearFlags();
+	
+	BC.b = 0x04;
+	AF.a = 0x99;
+	LD(LD_A_B, 0, 0);
+	assert(AF.a == 0x04);
+	
+	BC.c = 0xaa;
+	AF.a = 0x99;
+	LD(LD_A_C, 0, 0);
+	assert(AF.a == 0xaa);
+	
+	DE.d = 0x87;
+	AF.a = 0x99;
+	LD(LD_A_D, 0, 0);
+	assert(AF.a == 0x87);
+	
 	BC.c = 0x42;
 	LD(LD_C_n, 0x5a, 0);
 	assert(BC.c == 0x5a);
@@ -165,7 +263,49 @@ void clearFlags();
 	LD(LD_B_n, 0x5a, 0);
 	assert(BC.b == 0x5a);
 	
+	AF.a = 0x09;
+	Memory[0xff50] = 0x40;
+	LD(LDH_A_n, 0x50, 0);
+	assert(AF.a == 0x40);
+	
+	AF.a = 0x09;
+	Memory[0xffff] = 0x40;
+	LD(LDH_n_A, 0xff, 0);
+	assert(Memory[0xffff] == 0x09);
+	
+	AF.a = 0x01;
+	HL.l = 0x25;
+	HL.h = 0x65;
+	DE.e = 0x0d;
+	LD(LD_A_L, 0, 0);
+	assert(AF.a == 0x25);
+	LD(LD_A_H, 0, 0);
+	assert(AF.a == 0x65);
+	LD(LD_A_E, 0, 0);
+	assert(AF.a == 0x0d);
+	
 	// CP
+	clearFlags();
+	AF.a = 0x65;
+	BC.b = 0x03;
+	CP(CP_B, 0);
+	assert(getFlag(Z) == 0);
+	assert(getFlag(C) == 0);
+	
+	clearFlags();
+	AF.a = 0x6a;
+	BC.b = 0x6a;
+	CP(CP_B, 0);
+	assert(getFlag(Z) == 1);
+	assert(getFlag(C) == 0);
+	
+	clearFlags();
+	AF.a = 0x6;
+	BC.b = 0x30;
+	CP(CP_B, 0);
+	assert(getFlag(Z) == 0);
+	assert(getFlag(C) == 1);
+	
 	clearFlags();
 	AF.a = 0x65;
 	CP(CP_n, 0x3);
@@ -183,6 +323,119 @@ void clearFlags();
 	CP(CP_n, 0x30);
 	assert(getFlag(Z) == 0);
 	assert(getFlag(C) == 1);
+	
+	clearFlags();
+	AF.a = 0x65;
+	HL.hl = 0x8002;
+	Memory[0x8002] = 0x3;
+	CP(CP_HL, 0);
+	assert(getFlag(Z) == 0);
+	assert(getFlag(C) == 0);
+	
+	clearFlags();
+	AF.a = 0x6a;
+	HL.hl = 0x8002;
+	Memory[0x8002] = 0x6a;
+	CP(CP_HL, 0);
+	assert(getFlag(Z) == 1);
+	assert(getFlag(C) == 0);
+	
+	clearFlags();
+	AF.a = 0x6;
+	HL.hl = 0x8002;
+	Memory[0x8002] = 0x30;
+	CP(CP_HL, 0);
+	assert(getFlag(Z) == 0);
+	assert(getFlag(C) == 1);
+	
+	// DEC
+	clearFlags();
+	DE.e = 0x90;
+	DEC(DEC_E);
+	assert(DE.e == 0x8f);
+	assert(getFlag(Z) == 0);
+	assert(getFlag(N) == 1);
+	
+	clearFlags();
+	DE.e = 0x01;
+	DEC(DEC_E);
+	assert(DE.e == 0x00);
+	assert(getFlag(Z) == 1);
+	assert(getFlag(N) == 1);
+	
+	clearFlags();
+	DE.e = 0x00;
+	DEC(DEC_E);
+	assert(DE.e == 0xff);
+	assert(getFlag(Z) == 0);
+	assert(getFlag(N) == 1);
+	
+	clearFlags();
+	AF.a = 0x90;
+	DEC(DEC_A);
+	assert(AF.a == 0x8f);
+	assert(getFlag(Z) == 0);
+	assert(getFlag(N) == 1);
+	
+	clearFlags();
+	AF.a = 0x01;
+	DEC(DEC_A);
+	assert(AF.a == 0x00);
+	assert(getFlag(Z) == 1);
+	assert(getFlag(N) == 1);
+	
+	clearFlags();
+	AF.a = 0x00;
+	DEC(DEC_A);
+	assert(AF.a == 0xff);
+	assert(getFlag(Z) == 0);
+	assert(getFlag(N) == 1);
+	
+	// INC
+	clearFlags();
+	HL.hl = 0x1002;
+	INC(INC_HL);
+	assert(HL.hl == 0x1003);
+	assert(getFlag(H) == 0);
+	assert(getFlag(Z) == 0);
+	assert(getFlag(N) == 0);
+	
+	clearFlags();
+	HL.hl = 0xffff;
+	INC(INC_HL);
+	assert(HL.hl == 0x0);
+	assert(getFlag(H) == 0);
+	assert(getFlag(Z) == 0);
+	assert(getFlag(N) == 0);
+	
+	clearFlags();
+	DE.e = 0xff;
+	INC(INC_E);
+	assert(DE.e == 0x0);
+	assert(getFlag(H) == 1);
+	assert(getFlag(Z) == 1);
+	assert(getFlag(N) == 0);
+	
+	clearFlags();
+	DE.e = 0x0f;
+	INC(INC_E);
+	assert(DE.e == 0x10);
+	assert(getFlag(H) == 1);
+	assert(getFlag(Z) == 0);
+	assert(getFlag(N) == 0);
+	
+	// CALL / RET
+	PC = 0x1000;
+	SP = 0x1789;
+	CALL(CALL_nn, 0x45, 0x7a);
+	assert(PC == 0x7a45);
+	assert(SP == 0x1787);
+	assert(Memory[SP + 1] == 0x03);
+	assert(Memory[SP + 2] == 0x10);
+	RET_(RET);
+	assert(PC == 0x1003);
+	assert(SP == 0x1789);
+	
  }
  
  void clearFlags() {
