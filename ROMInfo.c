@@ -17,7 +17,7 @@ void DisplayCartridgeInfo() {
 	printf("Cartridge Info:\nName: \"%s\"\n", CartInfo->title);
 	printf("Type: %s - %s\n", CartInfo->gbc ? "GameBoy Color" : "GameBoy", CartInfo->typeName);
 	printf("ROM Type: %s\nRAM Type: %s\n", CartInfo->romTypeName, CartInfo->ramTypeName);
-	printf("ROM Controller Type: %s\n", CartInfo->ROMcontrollerName);
+	printf("ROM Controller Type: %s\n\n", CartInfo->ROMcontrollerName);
 }
 
 void SetCartridgeInfo() {
@@ -209,15 +209,15 @@ void SetCartridgeNames() {
 	}
 	
 	switch(CartInfo->ramType) {
-		case 0:
+		case NO_RAM:
 			CartInfo->ramTypeName = "None"; break;
-		case 1:
+		case RAM_1_2:
 			CartInfo->ramTypeName = " 16KBit =   2KByte = 1 bank"; break;
-		case 2:
+		case RAM_1_8:
 			CartInfo->ramTypeName = " 64KBit =   8KByte = 1 bank"; break;
-		case 3:
+		case RAM_4_32:
 			CartInfo->ramTypeName = "256KBit =  32KByte = 4 banks"; break;
-		case 4:
+		case RAM_16_128:
 			CartInfo->ramTypeName = "  1MBit = 128KByte = 16 banks"; break;
 	}
 }

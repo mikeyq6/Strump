@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <string.h>
 #include <conio.h>
 #include <stdlib.h>
 #include "Commands.h"
@@ -39,12 +40,17 @@ uint8_t InternalRom[INTERNAL_ROM_SIZE] = { 0x31,0xFE,0xFF,0xAF,0x21,0xFF,0x9F,0x
 
 void initCPU() {
 	Halted = Stopped = WillEnableInterrupts = WillDisableInterrupts = InterruptsEnabled = 0;
-	Startup = 1;
-	RomBank = 1;
-	RamBank = 1;
-	RamEnabled = 0;
+	Startup = TRUE;
+	RomBank = 0;
+	RamBank = 0;
+	RamEnabled = FALSE;
+	RomBanking = TRUE;
 	sCounter = 0;
 	PC = 0x000;
+	
+	memset(Memory, 0, sizeof(Memory));
+	memset(RamBankData, 0, sizeof(RamBankData));
+	memset(InstructionStats, 0, sizeof(InstructionStats));
 	
 #ifdef STEPTHROUGH
 	InitCartridgeInfo();
@@ -210,6 +216,49 @@ void Start() {
 				scanf_s("%x", &input);
 				printf("Cartridge[%05x] = %02x\n\n", (uint16_t)input, Cartridge[input]);
 				goto debug_routine;
+			} else if(x == 'i') {
+				char buffer[11];
+				scanf_s("%s", buffer, 10);
+				if(strcmp(buffer, "s") == 0) {
+					printf("Instructions used so far:\n");
+					for(int s=0; s<512; s++) {
+						if(s == 0x100) {
+							printf("\n\nCB Instructions used so far:\n");
+						}
+						if(InstructionStats[s] > 0) {
+							if(s > 0xff) {
+								printf("%02x(%x) ", s-0xff, InstructionStats[s]);
+							} else {
+								printf("%02x(%x) ", s, InstructionStats[s]);
+							}
+						}
+					}
+				} else if(strcmp(buffer, "r") == 0) {
+					// reset
+					memset(InstructionStats, 0, sizeof(InstructionStats));
+				} else if(strcmp(buffer, "f") == 0) {
+					// output to file
+					int err = fopen_s(&fp, "InsData.csv", "w");
+					fprintf(fp, "Instructions used so far:,\n");
+					for(int s=0; s<512; s++) {
+						if(s == 0x100) {
+							fprintf(fp, "CB Instructions used so far:,\n");
+						}
+						if(InstructionStats[s] > 0) {
+							if(s > 0xff) {
+								fprintf(fp, "%02x,%u\n", s-0xff, InstructionStats[s]);
+							} else {
+								fprintf(fp, "%02x,%u\n", s, InstructionStats[s]);
+							}
+						}
+					}
+					fclose(fp);
+					goto debug_routine;
+				} else {
+					printf("Unknown option");
+				}				
+				printf("\n\n");
+				goto debug_routine;
 			}
 		}
 #endif
@@ -260,6 +309,9 @@ uint8_t ReadMem(uint16_t location) {
 		return InternalRom[location];
 	} else if(location >= 0 && location <= 0x14d) {
 		return Cartridge[location];
+	} else if(location >= 0xa000 && location < 0xc000) {
+		location -= 0xa000;
+		return RamBankData[location + (RamBank * 0x2000)];
 	} else if(location >= 0xe000 && location < 0xfe00) { // Allow for the mirrored internal RAM
 		return Memory[location - 0x2000];
 	} else {
@@ -271,13 +323,44 @@ void WriteMem(uint16_t location, uint8_t value) {
 	
 	if(location == DIV) {
 		Memory[location] = 0; // Always set DIV to 0 on write
-	} else if(location >= 0x2000 && location <= 0x3fff) { // ROM Switching
+	} else if(location >= 0 && location < 0x2000) {
+		printf("Enabling RAM/ROM: %02x\n", value);
+		_getch();
+		if(value == 0x0a) {
+			RamEnabled = TRUE;
+		} else {
+			RamEnabled = FALSE;
+		}
+	} else if(location >= 0x2000 && location < 0x4000) { // ROM Switching
 		RomBank = value;
-	} else if(location >= 0x4000 && location <= 0x5fff) { // RAM Switching
-		RamBank = value;
+	} else if(location >= 0x4000 && location < 0x6000) { // ROM/RAM Switching
+		printf("ROM/RAM Switching. RomBanking = %s, Bank=%02x\n", (RomBanking ? "true" : "false"), value);
+		_getch();
+		if(CartInfo->controllerType == MBC1 || CartInfo->controllerType == MBC3) {
+			if(RomBanking) {
+				RomBank = value;
+			} else {
+				RamBank = value;
+			}
+		}
+	} else if (location >= 0x6000 && location < 0x8000) { // Set Rom or Ram banking
+		if(CartInfo->controllerType == MBC1) {
+			RomBanking = (value == 0) ? TRUE : FALSE;
+			RomBank = 0;
+		}
 	} else if(location >= 0xe000 && location < 0xfe00) { // Allow for the mirrored internal RAM
 		Memory[location - 0x2000] = value;
 		Memory[location] = value;
+	} else if(location >= 0xa000 && location < 0xc000) { // Writing to RAM
+		if(RamEnabled) {
+			location -= 0xa000;
+			RamBankData[location + (RamBank * 0x2000)] = value;
+			printf("Writing (%02x) to RAM at address(%04x)\n", value, (location + (RamBank * 0x2000)));
+			_getch();
+		} else {
+			printf("Trying to write to RAM but it is not enabled");
+			_getch();
+		}
 	} else if(location == ENDSTART) {;
 		Startup = 0;
 	} else if(location == LY) {
@@ -411,6 +494,11 @@ static void PushPCOntoStack() {
 void Run(uint8_t opcode, uint8_t param1, uint8_t param2) {
 	uint8_t skipPCInc = 0;
 	uint8_t p1, p2;
+	InstructionStats[opcode]++;
+	if(opcode == 0xff) {
+		printf("PC=%04x", PC);
+		_getch();
+	}
 	
 	switch(opcode) {
 		case CB:
@@ -697,6 +785,8 @@ void Run(uint8_t opcode, uint8_t param1, uint8_t param2) {
 	else { PC += (1 + GetParameters(opcode, &p1, &p2)); }
 }
 void RunCBInstruction(uint8_t opcode) {
+	InstructionStats[opcode + 0xff]++;
+	
 	switch(opcode) {
 		case SWAP_A:
 		case SWAP_B:
@@ -996,13 +1086,15 @@ uint8_t GetNextInstruction() {
 
 uint8_t GetValueAt(uint16_t address) {
 	uint8_t val = 0;
-	uint32_t nAddress = 0;
+	uint32_t nAddress = address;
 	
 	if(address >= 0x4000 && address <= 0x7fff) {
 		if(RomBank == 0x13) {
 			printf("address=%04x, newAddress=%x\n", address, address + ((RomBank - 1) * 0x4000));
 		}
-		nAddress = address + ((RomBank - 1) * 0x4000);
+		if(RomBank > 1) {
+			nAddress = address + ((RomBank - 1) * 0x4000);
+		}
 		val = Cartridge[address];
 		if(RomBank == 0x13) {
 			printf("address=%x, val=%02x\n", address, val);

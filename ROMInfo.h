@@ -5,6 +5,12 @@
 #define MBC5		0x08
 #define MM01		0x10
 
+#define NO_RAM		0
+#define RAM_1_2		1
+#define RAM_1_8		2
+#define RAM_4_32	3
+#define RAM_16_128	4
+
 typedef struct _cartridgeInfo {
 	char title[17];
 	uint8_t gbc;
