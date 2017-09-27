@@ -325,7 +325,7 @@ void WriteMem(uint16_t location, uint8_t value) {
 		Memory[location] = 0; // Always set DIV to 0 on write
 	} else if(location >= 0 && location < 0x2000) {
 		printf("Enabling RAM/ROM: %02x\n", value);
-		_getch();
+		//_getch();
 		if(value == 0x0a) {
 			RamEnabled = TRUE;
 		} else {
@@ -495,10 +495,10 @@ void Run(uint8_t opcode, uint8_t param1, uint8_t param2) {
 	uint8_t skipPCInc = 0;
 	uint8_t p1, p2;
 	InstructionStats[opcode]++;
-	if(opcode == 0xff) {
-		printf("PC=%04x", PC);
-		_getch();
-	}
+	// if(opcode == 0xff) {
+		// printf("PC=%04x", PC);
+		// _getch();
+	// }
 	
 	switch(opcode) {
 		case CB:
