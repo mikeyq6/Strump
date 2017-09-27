@@ -93,6 +93,7 @@ void RLA_() {
 void ADD(uint8_t opcode, uint8_t param) {
 	uint8_t a, val;
 	uint16_t val16;
+	uint16_t oldHL = HL.hl;
 	
 	a = AF.a;
 	
@@ -128,12 +129,12 @@ void ADD(uint8_t opcode, uint8_t param) {
 	}
 	
 	if(opcode == ADD_HL_BC || opcode == ADD_HL_DE || opcode == ADD_HL_HL || opcode == ADD_HL_SP) {
-		if(((HL.hl & 0xfff) + (val16 & 0xfff)) & 0x1000)
+		if(((oldHL & 0xfff) + (val16 & 0xfff)) & 0x1000)
 			setFlag(H);
 		else
 			resetFlag(H);
 		
-		if((HL.hl + val16) & 0x10000)
+		if((oldHL + val16) & 0x10000)
 			setFlag(C);
 		else
 			resetFlag(C);
@@ -450,25 +451,33 @@ void LD(uint8_t opcode, uint8_t param1, uint8_t param2) {
  }
  
 void INC(uint8_t opcode) {
-	resetFlag(Z);
+	uint8_t flagsAffected = 1;
+	if(opcode == INC_BC || opcode == INC_DE || opcode == INC_HL || opcode == INC_SP) {
+		flagsAffected = 0;
+	}
+	
+	if(flagsAffected) {
+		resetFlag(Z);
+	}
+	uint8_t val;
 	
 	switch(opcode) {
 		case INC_A:
-			AF.a++; if(AF.a == 0) { setFlag(Z); } break;
+			val = AF.a; AF.a++; if(AF.a == 0) { setFlag(Z); } break;
 		case INC_B:
-			BC.b++; if(BC.b == 0) { setFlag(Z); }  break;
+			val = BC.b; BC.b++; if(BC.b == 0) { setFlag(Z); }  break;
 		case INC_C:
-			BC.c++; if(BC.c == 0) { setFlag(Z); }  break;
+			val = BC.c; BC.c++; if(BC.c == 0) { setFlag(Z); }  break;
 		case INC_D:
-			DE.d++; if(DE.d == 0) { setFlag(Z); }  break;
+			val = DE.d; DE.d++; if(DE.d == 0) { setFlag(Z); }  break;
 		case INC_E:
-			DE.e++; if(DE.e == 0) { setFlag(Z); }  break;
+			val = DE.e; DE.e++; if(DE.e == 0) { setFlag(Z); }  break;
 		case INC_H:
-			HL.h++; if(HL.h == 0) { setFlag(Z); }  break;
+			val = HL.h; HL.h++; if(HL.h == 0) { setFlag(Z); }  break;
 		case INC_L:
-			HL.l++; if(HL.l == 0) { setFlag(Z); }  break;
+			val = HL.l; HL.l++; if(HL.l == 0) { setFlag(Z); }  break;
 		case INC__HL_:
-			uint8_t val = ReadMem(HL.hl); WriteMem(HL.hl, val+1); if((val+1) == 0) { setFlag(Z); }  break;
+			val = ReadMem(HL.hl); WriteMem(HL.hl, val+1); if((val+1) == 0) { setFlag(Z); }  break;
 		case INC_BC:
 			BC.bc++; break;
 		case INC_DE:
@@ -479,29 +488,44 @@ void INC(uint8_t opcode) {
 			SP++; break;
 	}
 	
-	// TODO: Half carry
+	if(flagsAffected) {
+		// Half carry
+		if(((val & 0xf) + (0x01 & 0xf)) & 0x10)
+			setFlag(H);
+		else
+			resetFlag(H);
+	}
 }
 
 void DEC(uint8_t opcode) {
-	resetFlag(Z);
+	uint8_t flagsAffected = 1;
+	if(opcode == DEC_BC || opcode == DEC_DE || opcode == DEC_HL || opcode == DEC_SP) {
+		flagsAffected = 0;
+	}
+	
+	if(flagsAffected) {
+		resetFlag(Z);
+	}
+	uint8_t val;
+	
 	
 	switch(opcode) {
 		case DEC_A:
-			AF.a--; if(AF.a == 0) { setFlag(Z); } break;
+			val = AF.a; AF.a--; if(AF.a == 0) { setFlag(Z); } break;
 		case DEC_B:
-			BC.b--; if(BC.b == 0) { setFlag(Z); }  break;
+			val = AF.a; BC.b--; if(BC.b == 0) { setFlag(Z); }  break;
 		case DEC_C:
-			BC.c--; if(BC.c == 0) { setFlag(Z); }  break;
+			val = AF.a; BC.c--; if(BC.c == 0) { setFlag(Z); }  break;
 		case DEC_D:
-			DE.d--; if(DE.d == 0) { setFlag(Z); }  break;
+			val = AF.a; DE.d--; if(DE.d == 0) { setFlag(Z); }  break;
 		case DEC_E:
-			DE.e--; if(DE.e == 0) { setFlag(Z); }  break;
+			val = AF.a; DE.e--; if(DE.e == 0) { setFlag(Z); }  break;
 		case DEC_H:
-			HL.h--; if(HL.h == 0) { setFlag(Z); }  break;
+			val = AF.a; HL.h--; if(HL.h == 0) { setFlag(Z); }  break;
 		case DEC_L:
-			HL.l--; if(HL.l == 0) { setFlag(Z); }  break;
+			val = AF.a; HL.l--; if(HL.l == 0) { setFlag(Z); }  break;
 		case DEC__HL_:
-			uint8_t val = ReadMem(HL.hl); WriteMem(HL.hl, val-1); if((val-1) == 0) { setFlag(Z); }  break;
+			val = ReadMem(HL.hl); WriteMem(HL.hl, val-1); if((val-1) == 0) { setFlag(Z); }  break;
 		case DEC_BC:
 			BC.bc--; break;
 		case DEC_DE:
@@ -512,7 +536,13 @@ void DEC(uint8_t opcode) {
 			SP--; break;
 	}
 	
-	// TODO: Half carry
+	if(flagsAffected) {
+		// Half carry
+		if((val & 0xf) - (0x1 & 0xf) < 0) {
+			setFlag(H);
+		}
+		setFlag(N);
+	}
 }
 
 void JR(uint8_t opcode, uint8_t param1, uint8_t param2, uint8_t *skipPCInc) {
@@ -566,7 +596,7 @@ void CALL(uint8_t opcode, uint8_t param1, uint8_t param2) {
 	}
 	
 	if(doCall) {
-		uint16_t next = PC + 2;
+		uint16_t next = PC + 3;
 		Memory[SP] = (uint8_t)(next >> 8); SP--;
 		Memory[SP] = (uint8_t)(next & 0xff); SP--;
 		PC = address;
