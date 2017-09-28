@@ -259,6 +259,23 @@ void Start() {
 				}				
 				printf("\n\n");
 				goto debug_routine;
+			} else if(x == 'r') {
+				// Set register
+				unsigned int address;
+				printf("Set Register. Which?\n");
+				char buffer[11];
+				scanf_s("%s", buffer, 10);
+				
+				if(strcmp(buffer, "PC") == 0) {
+					printf("\nValue: ");
+					scanf_s("%x", &address);
+					PC = (uint16_t)address;
+					printf("\n\n");
+					goto debug_routine;
+				} else {
+					printf("\n\n");
+					goto debug_routine;
+				}
 			}
 		}
 #endif
@@ -1090,14 +1107,14 @@ uint8_t GetValueAt(uint16_t address) {
 	
 	if(address >= 0x4000 && address <= 0x7fff) {
 		if(RomBank == 0x13) {
-			printf("address=%04x, newAddress=%x\n", address, address + ((RomBank - 1) * 0x4000));
+			//printf("address=%04x, newAddress=%x\n", address, address + ((RomBank - 1) * 0x4000));
 		}
 		if(RomBank > 1) {
 			nAddress = address + ((RomBank - 1) * 0x4000);
 		}
 		val = Cartridge[address];
 		if(RomBank == 0x13) {
-			printf("address=%x, val=%02x\n", address, val);
+			//printf("address=%x, val=%02x\n", address, val);
 		}
 	} else {
 		val = Startup ? InternalRom[address] : Cartridge[address];
