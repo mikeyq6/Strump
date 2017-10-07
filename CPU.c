@@ -40,13 +40,13 @@ uint8_t InternalRom[INTERNAL_ROM_SIZE] = { 0x31,0xFE,0xFF,0xAF,0x21,0xFF,0x9F,0x
 
 void initCPU() {
 	Halted = Stopped = WillEnableInterrupts = WillDisableInterrupts = InterruptsEnabled = 0;
-	Startup = TRUE;
+	Startup = FALSE;
 	RomBank = 0;
 	RamBank = 0;
 	RamEnabled = FALSE;
 	RomBanking = TRUE;
 	sCounter = 0;
-	PC = 0x000;
+	PC = 0x100;
 	
 	memset(Memory, 0, sizeof(Memory));
 	memset(RamBankData, 0, sizeof(RamBankData));
@@ -65,10 +65,10 @@ void initCPU() {
 }
 
 void setDefaults() {
-	AF.af = 0x01b0;
-	BC.bc = 0x0013;
-	DE.de = 0x00d8;
-	HL.hl = 0x014d;
+	AF.af = 0x100;
+	BC.bc = 0x14;
+	DE.de = 0;
+	HL.hl = 0xc060;
 	SP = 0xfffe;
 	rDiv = 0;
 	WriteMem(TIMA, 0x00); // TIMA
@@ -102,6 +102,8 @@ void setDefaults() {
 	WriteMem(WY, 0x00); // WY
 	WriteMem(WX, 0x00); // WX
 	WriteMem(IE, 0x00); // IE
+	WriteMem(IF, 0xe1); // IE
+	WriteMem(STAT, 0x85); // IE
 }
 
 void Start() {
@@ -527,7 +529,6 @@ void Run(uint8_t opcode, uint8_t param1, uint8_t param2) {
 		case LD_E_E:
 		case LD_H_H:
 		case LD_L_L:
-		case AND_A:
 			break; // No effect
 		case LD_A_B:
 		case LD_A_C:
@@ -615,6 +616,7 @@ void Run(uint8_t opcode, uint8_t param1, uint8_t param2) {
 		case LDH_A_n:
 		case LDH_n_A:
 			LD(opcode, param1, param2); break;
+		case AND_A:
 		case AND_B:
 		case AND_C:
 		case AND_D:
@@ -1111,8 +1113,10 @@ uint8_t GetValueAt(uint16_t address) {
 		}
 		if(RomBank > 1) {
 			nAddress = address + ((RomBank - 1) * 0x4000);
+			val = Cartridge[nAddress];
+		} else {
+			val = Cartridge[address];
 		}
-		val = Cartridge[address];
 		if(RomBank == 0x13) {
 			//printf("address=%x, val=%02x\n", address, val);
 		}

@@ -5,9 +5,13 @@
 
 
 void XOR(uint8_t opcode, uint8_t param) {
-	 
-	 switch(opcode) {
-		 case XOR_A:
+	resetFlag(Z);
+	resetFlag(N);
+	resetFlag(H);
+	resetFlag(C);
+	
+	switch(opcode) {
+		case XOR_A:
 			AF.a ^= AF.a; break;
 		case XOR_B:
 			AF.a ^= BC.b; break;
@@ -25,13 +29,11 @@ void XOR(uint8_t opcode, uint8_t param) {
 			AF.a ^= ReadMem(HL.hl); break;
 		case XOR_n:
 			AF.a ^= param; break;
-	 }
+	}
 	 
-	 if(AF.a == 0) {
-		 setFlag(Z);
-	 } else {
-		 resetFlag(Z);
-	 }
+	if(AF.a == 0) {
+		setFlag(Z);
+	}
  }
  void RRCA_() {
 	resetFlag(Z);
@@ -216,6 +218,8 @@ void ADC(uint8_t opcode, uint8_t param) {
 }
 void AND(uint8_t opcode, uint8_t param) {	
 	switch(opcode) {
+		case AND_A:
+			AF.a = 0; break;
 		case AND_B:
 			AF.a &= BC.b; break;
 		case AND_C:
@@ -1263,7 +1267,7 @@ void SBC(uint8_t opcode, uint8_t param) {
 void CP(uint8_t opcode, uint8_t param) {
 	resetFlag(Z);
 	resetFlag(C);
-	resetFlag(N);
+	setFlag(N);
 	resetFlag(H);
 	uint8_t val = 0, res = 0;
 	uint8_t oldA = AF.a;
