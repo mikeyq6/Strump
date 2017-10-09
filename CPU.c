@@ -40,7 +40,7 @@ uint8_t InternalRom[INTERNAL_ROM_SIZE] = { 0x31,0xFE,0xFF,0xAF,0x21,0xFF,0x9F,0x
 
 void initCPU() {
 	Halted = Stopped = WillEnableInterrupts = WillDisableInterrupts = InterruptsEnabled = 0;
-	Startup = FALSE;
+	Startup = TRUE;
 	RomBank = 0;
 	RamBank = 0;
 	RamEnabled = FALSE;
@@ -495,6 +495,8 @@ void UpdateTimer(uint8_t opcode) {
 			Memory[DIV]++;
 			if(Memory[DIV] == 0) {
 				// set timer interrupt
+				//printf("setting interrupt\n");
+				//_getch();
 				SetInterrupt(I_Timer);
 			}
 		} else {
@@ -1456,8 +1458,8 @@ uint32_t GetColourForPaletteNumber(uint8_t pNumber) {
 
 #ifdef STEPTHROUGH
 void DisplayState() {
-	printf("Registers:\nAF: %02x%02x\tBC: %02x%02x\tZ N H C\nDE: %02x%02x\tHL: %02x%02x\t%x %x %x %x\nSP: %04x\tPC: %04x\nIF: %02x\tLY: %02x\tLYC: %02x\tSTAT: %02x\tRomBank: %02x\tDIV: %02x\trDiv: %x\n\n",
+	printf("Registers:\nAF: %02x%02x\tBC: %02x%02x\tZ N H C\nDE: %02x%02x\tHL: %02x%02x\t%x %x %x %x\nSP: %04x\tPC: %04x\nIE: %02x\tIF: %02x\tLY: %02x\tLYC: %02x\tSTAT: %02x\tRomBank: %02x\nTAC: %02x\tTMA %02x\tTIMA: %02x\tDIV: %02x\trDiv: %x\n\n",
 		AF.a, AF.f, BC.b, BC.c, DE.d, DE.e, HL.h, HL.l, getFlag(Z), getFlag(N), getFlag(H), getFlag(C), SP, PC,
-		Memory[IF], Memory[LY], Memory[LYC], Memory[STAT], RomBank, Memory[DIV], rDiv);
+		Memory[IF], Memory[IE], Memory[LY], Memory[LYC], Memory[STAT], RomBank, Memory[TAC], Memory[TMA], Memory[TIMA], Memory[DIV], rDiv);
 }
 #endif
