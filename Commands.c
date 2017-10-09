@@ -35,7 +35,7 @@ void XOR(uint8_t opcode, uint8_t param) {
 		setFlag(Z);
 	}
  }
- void RRCA_() {
+void RRCA_() {
 	resetFlag(Z);
 	resetFlag(H);
 	resetFlag(N);
@@ -46,6 +46,9 @@ void XOR(uint8_t opcode, uint8_t param) {
 	AF.a += c << 7;
 	if(c) {
 		setFlag(C);
+	}
+	if(AF.a == 0) {
+		setFlag(Z);
 	}
 }
 void RRA_() {
@@ -61,6 +64,9 @@ void RRA_() {
 	if(c) {
 		setFlag(C);
 	}
+	if(AF.a == 0) {
+		setFlag(Z);
+	}
 }
 void RLCA_() {
 	resetFlag(Z);
@@ -73,6 +79,9 @@ void RLCA_() {
 	AF.a += c >> 7;
 	if(c) {
 		setFlag(C);
+	}
+	if(AF.a == 0) {
+		setFlag(Z);
 	}
 }
 void RLA_() {
@@ -88,9 +97,10 @@ void RLA_() {
 	if(c) {
 		setFlag(C);
 	}
+	if(AF.a == 0) {
+		setFlag(Z);
+	}
 }
-
-
  
 void ADD(uint8_t opcode, uint8_t param) {
 	uint8_t a, val;
@@ -171,7 +181,6 @@ void ADD(uint8_t opcode, uint8_t param) {
 	}
 	resetFlag(N);
 }
-
 void ADC(uint8_t opcode, uint8_t param) {
 	uint8_t a, val;
 	
@@ -462,6 +471,7 @@ void INC(uint8_t opcode) {
 	
 	if(flagsAffected) {
 		resetFlag(Z);
+		resetFlag(N);
 	}
 	uint8_t val;
 	
@@ -500,7 +510,6 @@ void INC(uint8_t opcode) {
 			resetFlag(H);
 	}
 }
-
 void DEC(uint8_t opcode) {
 	uint8_t flagsAffected = 1;
 	if(opcode == DEC_BC || opcode == DEC_DE || opcode == DEC_HL || opcode == DEC_SP) {
@@ -509,6 +518,7 @@ void DEC(uint8_t opcode) {
 	
 	if(flagsAffected) {
 		resetFlag(Z);
+		setFlag(N);
 	}
 	uint8_t val;
 	
@@ -569,7 +579,7 @@ void JR(uint8_t opcode, uint8_t param1, uint8_t param2, uint8_t *skipPCInc) {
 		case JP_NZ_nn:
 			if(!getFlag(Z)) { PC = address; *skipPCInc = 1; }; break;
 		case JP_C_nn:
-			printf("JP C: address=%04x\n", address);
+			//printf("JP C: address=%04x\n", address);
 			if(getFlag(C)) { PC = address; *skipPCInc = 1; }; break;
 		case JP_Z_nn:
 			if(getFlag(Z)) { PC = address; *skipPCInc = 1; }; break;
@@ -659,7 +669,6 @@ void SWAP(uint8_t opcode) {
 	if(tmp == 0) { setFlag(Z); }
 
 }
-
 void BIT(uint8_t opcode, int bit_n) {
 	uint8_t set = 0;
 	uint8_t bit = 0;
@@ -750,7 +759,6 @@ void BIT(uint8_t opcode, int bit_n) {
 	resetFlag(N);
 	setFlag(H);
 }
-
 void SET(uint8_t opcode, uint8_t bit_n) {
 	uint8_t bit = 0;
 	
