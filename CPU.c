@@ -146,7 +146,7 @@ void Start() {
 				}
 			}
 #endif
-			Run(inst, (Startup ? InternalRom[PC+1] : Cartridge[PC+1]), 0);
+			Run(inst, param1, 0);
 		} else if(params == 2) {
 #ifdef STEPTHROUGH
 			if(ShouldPrint()) { printf(CodeToString(inst), param1, param2); }
