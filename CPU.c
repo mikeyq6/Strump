@@ -334,7 +334,11 @@ uint8_t ReadMem(uint16_t location) {
 	} else if(location >= 0xe000 && location < 0xfe00) { // Allow for the mirrored internal RAM
 		return Memory[location - 0x2000];
 	} else {
-		return Memory[location];
+		if(location >= 0x4000 && location <= 0x7fff) {
+			return GetValueAt(location);
+		} else {		
+			return Memory[location];
+		}
 	}
 	return 0;
 }

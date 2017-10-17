@@ -1349,13 +1349,13 @@ void POP(uint8_t opcode) {
 	SP++;
 	switch(opcode) {
 		case POP_AF:
-			AF.a = ReadMem(SP); AF.f = ReadMem(SP+1); SP++; break;
+			AF.a = Memory[SP]; AF.f = Memory[SP+1]; SP++; break;
 		case POP_DE:
-			DE.d = ReadMem(SP); DE.e = ReadMem(SP+1); SP++; break;
+			DE.d = Memory[SP]; DE.e = Memory[SP+1]; SP++; break;
 		case POP_BC:
-			BC.b = ReadMem(SP); BC.c = ReadMem(SP+1); SP++; break;
+			BC.b = Memory[SP]; BC.c = Memory[SP+1]; SP++; break;
 		case POP_HL:
-			HL.h = ReadMem(SP); HL.l = ReadMem(SP+1); SP++; break;
+			HL.h = Memory[SP]; HL.l = Memory[SP+1]; SP++; break;
 	}
 }
  
