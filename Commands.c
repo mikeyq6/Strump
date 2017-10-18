@@ -587,7 +587,7 @@ void JR(uint8_t opcode, uint8_t param1, uint8_t param2, uint8_t *skipPCInc) {
 			//printf("param1=%02x, param2=%02x, address=%04x\n", param1, param2, address);
 			PC = address; *skipPCInc = 1; break;
 		case JP_HL:
-			PC = ReadMem(HL.hl); *skipPCInc = 1; break;
+			PC = HL.hl; *skipPCInc = 1; break;
 	}
 }
 void CALL(uint8_t opcode, uint8_t param1, uint8_t param2) {
