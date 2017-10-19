@@ -333,12 +333,10 @@ uint8_t ReadMem(uint16_t location) {
 		return RamBankData[location + (RamBank * 0x2000)];
 	} else if(location >= 0xe000 && location < 0xfe00) { // Allow for the mirrored internal RAM
 		return Memory[location - 0x2000];
-	} else {
-		if(location >= 0x4000 && location <= 0x7fff) {
-			return GetValueAt(location);
-		} else {		
-			return Memory[location];
-		}
+	} else if(location >= 0x4000 && location <= 0x7fff) {
+		return GetValueAt(location);
+	} else {		
+		return Memory[location];
 	}
 	return 0;
 }
@@ -358,7 +356,7 @@ void WriteMem(uint16_t location, uint8_t value) {
 		RomBank = value;
 	} else if(location >= 0x4000 && location < 0x6000) { // ROM/RAM Switching
 		printf("ROM/RAM Switching. RomBanking = %s, Bank=%02x\n", (RomBanking ? "true" : "false"), value);
-		_getch();
+		//_getch();
 		if(CartInfo->controllerType == MBC1 || CartInfo->controllerType == MBC3) {
 			if(RomBanking) {
 				RomBank = value;
@@ -379,10 +377,10 @@ void WriteMem(uint16_t location, uint8_t value) {
 			location -= 0xa000;
 			RamBankData[location + (RamBank * 0x2000)] = value;
 			printf("Writing (%02x) to RAM at address(%04x)\n", value, (location + (RamBank * 0x2000)));
-			_getch();
+			//_getch();
 		} else {
 			printf("Trying to write to RAM but it is not enabled");
-			_getch();
+			//_getch();
 		}
 	} else if(location == ENDSTART) {;
 		Startup = 0;
@@ -767,7 +765,7 @@ void Run(uint8_t opcode, uint8_t param1, uint8_t param2) {
 		case RET_C:
 		case RET:
 		case RETI:
-			RET_(opcode); break;
+			RET_(opcode, &skipPCInc); break;
 		case RST_00H:
 		case RST_10H:
 		case RST_20H:
@@ -1113,7 +1111,9 @@ uint8_t GetValueAt(uint16_t address) {
 	uint8_t val = 0;
 	uint32_t nAddress = address;
 	
-	if(address >= 0x4000 && address <= 0x7fff) {
+	if(address >= 0 && address < 0x4000) {
+		return Startup ? InternalRom[address] : Cartridge[address];
+	} else if(address >= 0x4000 && address <= 0x7fff) {
 		if(RomBank == 0x13) {
 			//printf("address=%04x, newAddress=%x\n", address, address + ((RomBank - 1) * 0x4000));
 		}
@@ -1126,8 +1126,18 @@ uint8_t GetValueAt(uint16_t address) {
 		if(RomBank == 0x13) {
 			//printf("address=%x, val=%02x\n", address, val);
 		}
+	} else if(address >= 0xa000 && address < 0xc000) {
+		// External (cartridge) RAM
+		
+	} else if(address >= 0xc000 && address < 0xe000) {
+		// Internal Work RAM
+		address -= 0xa000;
+		return RamBankData[address + (RamBank * 0x2000)];
+	} else if(address >= 0xff80 && address < 0xffff) {
+		// High-RAM area
+		return Memory[address];
 	} else {
-		val = Startup ? InternalRom[address] : Cartridge[address];
+		val = Memory[address];
 	}
 	
 	//printf("address=%04x, val=%02x\n", address, val);

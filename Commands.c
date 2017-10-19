@@ -610,30 +610,30 @@ void CALL(uint8_t opcode, uint8_t param1, uint8_t param2) {
 	}
 	
 	if(doCall) {
-		uint16_t next = PC + 2;
-		Memory[SP] = (uint8_t)(next >> 8); SP--;
+		uint16_t next = PC + 3;
 		Memory[SP] = (uint8_t)(next & 0xff); SP--;
+		Memory[SP] = (uint8_t)(next >> 8); SP--;
 		PC = address;
 	}
 }
-void RET_(uint8_t opcode) {
+void RET_(uint8_t opcode, uint8_t *skipPCInc) {
 	uint16_t address;
 	
-	address = ReadMem(SP+1) + (ReadMem(SP+2) << 8);
+	address = (ReadMem(SP+1) << 8) + ReadMem(SP+2);
 	
 	switch(opcode) {
 		case RET_NC:
-			if(!getFlag(C)) { PC = address; SP += 2; }; break;
+			if(!getFlag(C)) { PC = address; *skipPCInc = 1; SP += 2; }; break;
 		case RET_NZ:
-			if(!getFlag(Z)) { PC = address; SP += 2; }; break;
+			if(!getFlag(Z)) { PC = address; *skipPCInc = 1; SP += 2; }; break;
 		case RET_Z:
-			if(getFlag(Z)) { PC = address; SP += 2; }; break;
+			if(getFlag(Z)) { PC = address; *skipPCInc = 1; SP += 2; }; break;
 		case RET_C:
-			if(getFlag(C)) { PC = address; SP += 2; }; break;
+			if(getFlag(C)) { PC = address; *skipPCInc = 1; SP += 2; }; break;
 		case RET:
-			PC = address; SP += 2; break;
+			PC = address; SP += 2; *skipPCInc = 1; break;
 		case RETI:
-			PC = address; SP += 2; InterruptsEnabled = 1; break;
+			PC = address; SP += 2; *skipPCInc = 1; InterruptsEnabled = 1; break;
 		
 	}
 }

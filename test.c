@@ -425,15 +425,16 @@ void clearFlags();
 	assert(getFlag(N) == 0);
 	
 	// CALL / RET
+	uint8_t skipPCIntTest = 0;
 	PC = 0x1000;
 	SP = 0x1789;
 	CALL(CALL_nn, 0x45, 0x7a);
 	assert(PC == 0x7a45);
 	assert(SP == 0x1787);
-	assert(Memory[SP + 1] == 0x02);
-	assert(Memory[SP + 2] == 0x10);
-	RET_(RET);
-	assert(PC == 0x1002);
+	assert(Memory[SP + 1] == 0x10);
+	assert(Memory[SP + 2] == 0x03);
+	RET_(RET, &skipPCIntTest);
+	assert(PC == 0x1003);
 	assert(SP == 0x1789);
 	
 	PC = 0x000;
