@@ -23,6 +23,7 @@ int skipuntil = 0;
 short tempShow = 1;
 uint8_t bdata[BACKGROUNDTILES * 16];
 FILE *fp;
+long long int iCounter = 0;
 #endif
 
 void readInitialProgram();
@@ -173,6 +174,12 @@ void Start() {
 			skipuntil = 0;
 			char x = _getch();
 			if(x == 'q') { break; }
+			else if(x == 'p') {
+				printf("Break when SP reaches: ");
+				unsigned int input;
+				scanf_s("%x", &input);
+				
+			}
 			else if(x == 's') { 
 				printf("Skip to address: ");
 				unsigned int input;
@@ -509,8 +516,8 @@ void UpdateTimer(uint8_t opcode) {
 }
 
 static void PushPCOntoStack() {
-	Memory[SP] = (uint8_t)(PC >> 8); SP--;
-	Memory[SP] = (uint8_t)(PC & 0xff); SP--;
+	Memory[--SP] = (uint8_t)(PC & 0xff);
+	Memory[--SP] = (uint8_t)(PC >> 8);
 }
  
 // Instructions 
@@ -518,6 +525,7 @@ void Run(uint8_t opcode, uint8_t param1, uint8_t param2) {
 	uint8_t skipPCInc = 0;
 	uint8_t p1, p2;
 	InstructionStats[opcode]++;
+	iCounter++;
 	// if(opcode == 0xff) {
 		// printf("PC=%04x", PC);
 		// _getch();
@@ -1122,9 +1130,6 @@ uint8_t GetValueAt(uint16_t address) {
 			val = Cartridge[nAddress];
 		} else {
 			val = Cartridge[address];
-		}
-		if(RomBank == 0x13) {
-			//printf("address=%x, val=%02x\n", address, val);
 		}
 	} else if(address >= 0xa000 && address < 0xc000) {
 		// External (cartridge) RAM

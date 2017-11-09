@@ -611,15 +611,15 @@ void CALL(uint8_t opcode, uint8_t param1, uint8_t param2) {
 	
 	if(doCall) {
 		uint16_t next = PC + 3;
-		Memory[SP] = (uint8_t)(next & 0xff); SP--;
-		Memory[SP] = (uint8_t)(next >> 8); SP--;
+		Memory[--SP] = (uint8_t)(next & 0xff);
+		Memory[--SP] = (uint8_t)(next >> 8);
 		PC = address;
 	}
 }
 void RET_(uint8_t opcode, uint8_t *skipPCInc) {
 	uint16_t address;
 	
-	address = (ReadMem(SP+1) << 8) + ReadMem(SP+2);
+	address = (ReadMem(SP) << 8) + ReadMem(SP+1);
 	
 	switch(opcode) {
 		case RET_NC:
@@ -634,7 +634,6 @@ void RET_(uint8_t opcode, uint8_t *skipPCInc) {
 			PC = address; SP += 2; *skipPCInc = 1; break;
 		case RETI:
 			PC = address; SP += 2; *skipPCInc = 1; InterruptsEnabled = 1; break;
-		
 	}
 }
 
@@ -1336,26 +1335,25 @@ void RST(uint8_t opcode) {
 void PUSH(uint8_t opcode) {
 	switch(opcode) {
 		case PUSH_AF:
-			Memory[SP] = AF.f; Memory[SP-1] = AF.a; SP -= 2; break;
+			Memory[--SP] = AF.f; Memory[--SP] = AF.a; break;
 		case PUSH_DE:
-			Memory[SP] = DE.e; Memory[SP-1] = DE.d; SP -= 2; break;
+			Memory[--SP] = DE.e; Memory[--SP] = DE.d; break;
 		case PUSH_BC:
-			Memory[SP] = BC.c; Memory[SP-1] = BC.b; SP -= 2; break;
+			Memory[--SP] = BC.c; Memory[--SP] = BC.b; break;
 		case PUSH_HL:
-			Memory[SP] = HL.l; Memory[SP-1] = HL.h; SP -= 2; break;
+			Memory[--SP] = HL.l; Memory[--SP] = HL.h; break;
 	}
 }
 void POP(uint8_t opcode) {
-	SP++;
 	switch(opcode) {
 		case POP_AF:
-			AF.a = Memory[SP]; AF.f = Memory[SP+1]; SP++; break;
+			AF.a = Memory[SP++]; AF.f = Memory[SP++]; break;
 		case POP_DE:
-			DE.d = Memory[SP]; DE.e = Memory[SP+1]; SP++; break;
+			DE.d = Memory[SP++]; DE.e = Memory[SP++]; break;
 		case POP_BC:
-			BC.b = Memory[SP]; BC.c = Memory[SP+1]; SP++; break;
+			BC.b = Memory[SP++]; BC.c = Memory[SP++]; break;
 		case POP_HL:
-			HL.h = Memory[SP]; HL.l = Memory[SP+1]; SP++; break;
+			HL.h = Memory[SP++]; HL.l = Memory[SP++]; break;
 	}
 }
  
