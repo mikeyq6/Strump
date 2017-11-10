@@ -19,5 +19,6 @@ uint32_t screenPixels[NUMPIXELS];
 void drawInit(int argc, char* argv[]);
 void loadBackground();
 void callRefresh();
+void printTileData(int tileNum);
 
 #endif 

@@ -525,7 +525,9 @@ void Run(uint8_t opcode, uint8_t param1, uint8_t param2) {
 	uint8_t skipPCInc = 0;
 	uint8_t p1, p2;
 	InstructionStats[opcode]++;
+	#ifdef STEPTHROUGH
 	iCounter++;
+	#endif
 	// if(opcode == 0xff) {
 		// printf("PC=%04x", PC);
 		// _getch();
@@ -1346,13 +1348,14 @@ uint8_t GetCycles(opcode) {
 // LCDC
 void UpdateGraphics(uint8_t opcode) {
 	uint8_t cycles;
-	SetLCDStatus();
-	
+	SetLCDStatus();	
+		
 	if(IsLCDEnabled()) {
 		cycles = GetCycles(opcode);
 		sCounter -= cycles;
 	} else return;
 	
+	//printf("sCounter=%04x\n", sCounter);
 	if(sCounter <= 0) {
 		Memory[LY]++;
 		uint8_t cLine = Memory[LY];

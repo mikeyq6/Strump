@@ -160,18 +160,28 @@ void loadBackground() {
 		//printf("tileNum=%02x\n", Memory[bMap + i]);
 		if(address == 0x8800) { // allow for negative numbers
 			getTileAt((offset * (int8_t)tileNum) + address, background[i]);
+			if(tileNum > 0) {
+				//printf("address=%04x, tileNum=%02x\n", (offset * (int8_t)tileNum) + address, tileNum);
+				//printTileData(i);
+			}
 		} else {
 			getTileAt((offset * tileNum) + address, background[i]);
 			if(tileNum > 0) {
-				//printf("address=%04x\n", (offset * tileNum) + address);
-				/*printf("Tile data: ");
-				for(int k=0; k<16; k++) {
-					printf("%02x ", background[i]->data[k]);
-				}
-				printf("\n");*/
+				//printf("address=%04x, tileNum=%02x\n", (offset * tileNum) + address, tileNum);
+				//printTileData(i);
 			}
 		}
 	}
+}
+
+void printTileData(int tileNum) {
+	
+	//printf("address=%04x\n", (offset * tileNum) + address);
+	printf("Tile data: ");
+	for(int k=0; k<16; k++) {
+		printf("%02x ", background[tileNum]->data[k]);
+	}
+	printf("\n");
 }
 
 void setBackgroundPixels() {
