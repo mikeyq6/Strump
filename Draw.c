@@ -66,6 +66,7 @@ void callRefresh() {
 	SDL_RenderClear(renderer);
 	SDL_RenderCopy(renderer, texture, NULL, NULL);
 	SDL_RenderPresent(renderer);
+	//SDL_PollEvent(NULL);
 	
 	//_getch();
 }
