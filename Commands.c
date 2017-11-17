@@ -472,6 +472,7 @@ void INC(uint8_t opcode) {
 	if(flagsAffected) {
 		resetFlag(Z);
 		resetFlag(N);
+		resetFlag(H);
 	}
 	uint8_t val;
 	
@@ -506,8 +507,6 @@ void INC(uint8_t opcode) {
 		// Half carry
 		if(((val & 0xf) + (0x01 & 0xf)) & 0x10)
 			setFlag(H);
-		else
-			resetFlag(H);
 	}
 }
 void DEC(uint8_t opcode) {
@@ -518,6 +517,7 @@ void DEC(uint8_t opcode) {
 	
 	if(flagsAffected) {
 		resetFlag(Z);
+		resetFlag(H);
 		setFlag(N);
 	}
 	uint8_t val;
@@ -527,17 +527,17 @@ void DEC(uint8_t opcode) {
 		case DEC_A:
 			val = AF.a; AF.a--; if(AF.a == 0) { setFlag(Z); } break;
 		case DEC_B:
-			val = AF.a; BC.b--; if(BC.b == 0) { setFlag(Z); }  break;
+			val = BC.b; BC.b--; if(BC.b == 0) { setFlag(Z); }  break;
 		case DEC_C:
-			val = AF.a; BC.c--; if(BC.c == 0) { setFlag(Z); }  break;
+			val = BC.c; BC.c--; if(BC.c == 0) { setFlag(Z); }  break;
 		case DEC_D:
-			val = AF.a; DE.d--; if(DE.d == 0) { setFlag(Z); }  break;
+			val = DE.d; DE.d--; if(DE.d == 0) { setFlag(Z); }  break;
 		case DEC_E:
-			val = AF.a; DE.e--; if(DE.e == 0) { setFlag(Z); }  break;
+			val = DE.e; DE.e--; if(DE.e == 0) { setFlag(Z); }  break;
 		case DEC_H:
-			val = AF.a; HL.h--; if(HL.h == 0) { setFlag(Z); }  break;
+			val = HL.h; HL.h--; if(HL.h == 0) { setFlag(Z); }  break;
 		case DEC_L:
-			val = AF.a; HL.l--; if(HL.l == 0) { setFlag(Z); }  break;
+			val = HL.l; HL.l--; if(HL.l == 0) { setFlag(Z); }  break;
 		case DEC__HL_:
 			val = ReadMem(HL.hl); WriteMem(HL.hl, val-1); if((val-1) == 0) { setFlag(Z); }  break;
 		case DEC_BC:
@@ -552,7 +552,7 @@ void DEC(uint8_t opcode) {
 	
 	if(flagsAffected) {
 		// Half carry
-		if((val & 0xf) - (0x1 & 0xf) < 0) {
+		if((val & 0x0f) == 0) {
 			setFlag(H);
 		}
 		setFlag(N);
