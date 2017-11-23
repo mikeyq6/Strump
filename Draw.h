@@ -1,3 +1,4 @@
+#include <stdio.h> 
 #include <SDL.h>
 
 #ifndef DRAW_H
@@ -20,5 +21,7 @@ void drawInit(int argc, char* argv[]);
 void loadBackground();
 void callRefresh();
 void printTileData(int tileNum);
+
+FILE *out;
 
 #endif 

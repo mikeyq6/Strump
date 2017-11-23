@@ -1363,6 +1363,7 @@ uint8_t GetCycles(opcode) {
 
 // LCDC
 void UpdateGraphics(uint8_t opcode) {
+	
 	uint8_t cycles;
 	SetLCDStatus();	
 		
@@ -1388,7 +1389,7 @@ void UpdateGraphics(uint8_t opcode) {
 		}	
 		
 	}
-	
+	//callRefresh();
 }
 
 void SetLCDStatus() {
