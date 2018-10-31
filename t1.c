@@ -36,23 +36,20 @@ SDL_Event e;
     }
     else
     {
-        //Load media
-        if( !loadMedia() )
-        {
-            printf( "Failed to load media!\n" );
-        }
-        else
-        {
-            //Apply the image
-            SDL_BlitSurface( gHelloWorld, NULL, gScreenSurface, NULL );
-			//Update the surface
-            SDL_UpdateWindowSurface( gWindow );
-			 //Wait two seconds
-            //SDL_Delay( 2000 );
-        }
+		//While application is running
+		while( !quit ) {
+			//Handle events on queue
+			while( SDL_PollEvent( &e ) != 0 )
+			{
+				//User requests quit
+				if( e.type == SDL_QUIT ) {
+					quit = 1;
+				}
+			}
+		}
     }
 
-	int c = _getch();
+	//int c = _getch();
 	
     //Free resources and close SDL
     close();
@@ -90,21 +87,21 @@ SDL_Event e;
     return success;
 }
 
-int loadMedia()
-{
-    //Loading success flag
-    int success = 1;
+// int loadMedia()
+// {
+    // //Loading success flag
+    // int success = 1;
 
-    //Load splash image
-    gHelloWorld = SDL_LoadBMP( "wolf.bmp" );
-    if( gHelloWorld == NULL )
-    {
-        printf( "Unable to load image %s! SDL Error: %s\n", "02_getting_an_image_on_the_screen/hello_world.bmp", SDL_GetError() );
-        success = 0;
-    }
+    // //Load splash image
+    // gHelloWorld = SDL_LoadBMP( "wolf.bmp" );
+    // if( gHelloWorld == NULL )
+    // {
+        // printf( "Unable to load image %s! SDL Error: %s\n", "02_getting_an_image_on_the_screen/hello_world.bmp", SDL_GetError() );
+        // success = 0;
+    // }
 
-    return success;
-}
+    // return success;
+// }
 
 void close()
 {

@@ -84,6 +84,8 @@ register int32_t sCounter;
 
 // Init
 void initCPU();
+void NewStart();
+uint8_t ProcessNextInstruction();
 void Start();
 void Quit();
 

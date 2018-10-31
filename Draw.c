@@ -29,7 +29,7 @@ void drawInit(int argc, char* argv[]) {
 
     SDL_Init(SDL_INIT_EVERYTHING);
 	screen = SDL_CreateWindow("Hello World!",
-		10, 10, S_WIDTH, S_HEIGHT, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
+		100, 100, S_WIDTH, S_HEIGHT, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
 	renderer = SDL_CreateRenderer(screen, -1, 0);
 	texture = SDL_CreateTexture(renderer,
                                SDL_PIXELFORMAT_RGB888,
@@ -155,9 +155,9 @@ void setBackgroundPixels() {
 			}
 			fwrite(&pixel, sizeof(uint8_t), sizeof(uint8_t) * 1, out);
 		}
-		pixel = 13;
-		fwrite(&pixel, sizeof(uint8_t), sizeof(uint8_t) * 1, out);
-		pixel = 10;
+		//pixel = (uint8_t)13;
+		//fwrite(&pixel, sizeof(uint8_t), sizeof(uint8_t) * 1, out);
+		pixel = (uint8_t)10;
 		fwrite(&pixel, sizeof(uint8_t), sizeof(uint8_t) * 1, out);
 	}
 	

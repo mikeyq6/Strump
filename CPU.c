@@ -10,7 +10,7 @@
 #include "test.h"
 
 #define RUNTESTS
-#define STEPTHROUGH 0
+//#define STEPTHROUGH 0
 //#define DEBUG_TIMER
 
 #ifdef RUNTESTS
@@ -34,8 +34,11 @@ uint8_t GetCycles(uint8_t opcode);
 short ShouldPrint();
 void PushPCOntoStack();
 void UpdateGraphics(uint8_t opcode);
+void NewUpdateGraphics(uint8_t opcode);
 uint32_t GetColourForPaletteNumber(uint8_t pNumber);
 uint8_t running = 1;
+uint8_t pause = 0;
+uint8_t shouldRefresh = 0;
 SDL_Event event;
 
 // Internal startup ROM
@@ -55,8 +58,9 @@ void initCPU() {
 	memset(RamBankData, 0, sizeof(RamBankData));
 	memset(InstructionStats, 0, sizeof(InstructionStats));
 	
-#ifdef STEPTHROUGH
 	InitCartridgeInfo();
+	
+#ifdef STEPTHROUGH
 	for(int i=0; i<BACKGROUNDTILES * 16; i++) {
 		bdata[i] = 0;
 	}
@@ -107,6 +111,80 @@ void setDefaults() {
 	WriteMem(IE, 0x00); // IE
 	WriteMem(IF, 0xe1); // IE
 	WriteMem(STAT, 0x85); // IE
+}
+
+void NewStart() {
+	uint8_t inst;
+	setDefaults();
+	
+	while(running) {
+		while(SDL_PollEvent(&event)) {
+			if(event.type == SDL_QUIT) {
+				running = 0;
+			}
+			if(event.type == SDL_KEYDOWN) {
+				running = 0;				
+			}
+			if(event.type == SDL_MOUSEBUTTONDOWN) {
+				pause = !pause;
+			}
+		}
+		inst = ProcessNextInstruction();
+		if(InterruptsEnabled) {
+			CheckInterrupts();
+		}
+		UpdateTimer(inst);
+		UpdateGraphics(inst);
+		
+		if(shouldRefresh) {
+			callRefresh();
+		}
+	}
+}
+
+uint8_t ProcessNextInstruction() {
+	uint8_t param1 = 0;
+	uint8_t param2 = 0;
+	
+	uint8_t inst = GetNextInstruction();
+	short params = GetParameters(inst, &param1, &param2);
+	
+	if(WillEnableInterrupts) {
+		WillEnableInterrupts = 0;
+		InterruptsEnabled = 1;
+	}
+	if(WillDisableInterrupts) {
+		WillDisableInterrupts = 0;
+		InterruptsEnabled = 0;
+	}
+	
+	if(params == 0) {
+#ifdef STEPTHROUGH
+		if(ShouldPrint()) { printf(CodeToString(inst)); }
+#endif
+		Run(inst, 0, 0);
+	} else if(params == 1) {
+#ifdef STEPTHROUGH
+		if(ShouldPrint()) { 
+			if(inst == CB) {
+				printf(CodeToString(inst), CBCodeToString(param1));
+			} else {
+				printf(CodeToString(inst), param1);
+			}
+		}
+#endif
+		Run(inst, param1, 0);
+	} else if(params == 2) {
+#ifdef STEPTHROUGH
+		if(ShouldPrint()) { printf(CodeToString(inst), param1, param2); }
+#endif
+		Run(inst, param1, param2);
+	}
+	if(ShouldPrint()) { 
+		printf("\n");
+	}
+	
+	return inst;
 }
 
 void Start() {
@@ -1386,6 +1464,36 @@ void UpdateGraphics(uint8_t opcode) {
 		} else if(cLine == 143) {
 			//printf("cLine=%02x, callRefresh();\n", cLine);
 			callRefresh();
+		}	
+		
+	}
+	//callRefresh();
+}
+void NewUpdateGraphics(uint8_t opcode) {
+	
+	shouldRefresh = 0;
+	uint8_t cycles;
+	SetLCDStatus();	
+		
+	if(IsLCDEnabled()) {
+		cycles = GetCycles(opcode);
+		sCounter -= cycles;
+	} else return;
+	
+	//printf("sCounter=%04x\n", sCounter);
+	if(sCounter <= 0) {
+		Memory[LY]++;
+		uint8_t cLine = Memory[LY];
+		
+		sCounter = 0x1c8;
+		
+		if(cLine == 0x90) {
+			SetInterrupt(I_VBlank);
+		} else if(cLine > 0x99) {
+			Memory[LY] = 0;
+		} else if(cLine == 143) {
+			//printf("cLine=%02x, callRefresh();\n", cLine);
+			shouldRefresh = 1;
 		}	
 		
 	}
