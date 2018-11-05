@@ -334,6 +334,9 @@ uint8_t ReadMem(uint16_t location) {
 	} else if(location >= 0xe000 && location < 0xfe00) { // Allow for the mirrored internal RAM
 		return Memory[location - 0x2000];
 	} else {
+		if(location == 0x7f39) {
+		    printf("Getting value from %04x = %02x\n", DE.de, GetValueAt(DE.de)); 
+		}
 		return Memory[location];
 	}
 	return 0;
