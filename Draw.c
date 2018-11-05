@@ -1,4 +1,3 @@
-#include <stdio.h> 
 #include <stdlib.h>
 #include "alias.h"
 #include "CPU.h"
@@ -17,6 +16,11 @@ void getTileAt(uint16_t address, tile *t);
 void setBackgroundPixels();
 
 void drawInit(int argc, char* argv[]) {
+	int err = fopen_s(&out, "pixellog.txt", "w");
+	if(err > 0) {
+		printf("Coulnd't open file '%s'\n", "pixellog.txt");
+	}
+
 	for(int i=0; i<BACKGROUNDTILES; i++) {
 		background[i] = malloc(sizeof(tile));
 	}
@@ -25,7 +29,7 @@ void drawInit(int argc, char* argv[]) {
 
     SDL_Init(SDL_INIT_EVERYTHING);
 	screen = SDL_CreateWindow("Hello World!",
-		10, 10, S_WIDTH, S_HEIGHT, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
+		100, 100, S_WIDTH, S_HEIGHT, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
 	renderer = SDL_CreateRenderer(screen, -1, 0);
 	texture = SDL_CreateTexture(renderer,
                                SDL_PIXELFORMAT_RGB888,
@@ -66,6 +70,7 @@ void callRefresh() {
 	SDL_RenderClear(renderer);
 	SDL_RenderCopy(renderer, texture, NULL, NULL);
 	SDL_RenderPresent(renderer);
+	//SDL_PollEvent(NULL);
 	
 	//_getch();
 }
@@ -73,77 +78,6 @@ void displayMe(void)
 {
 	printf("x");
 	loadBackground();
-	/*
-    glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
-	
-	glBegin(GL_QUADS);
-	glColor3f( 1.0, 0.0, 0.0 );
-	glVertex2i(20, 10);
-	glVertex2i(20, 20);
-	glVertex2i(10, 20);
-	glVertex2i(10, 10);
-	
-	uint8_t test[2 * 2 * 3] = {10, 10, 10, 50, 50 ,50, 90,10,90, 200,0,0};
-	
-	glRasterPos2i(20,20);
-	glDrawPixels(2, 2, GL_RGB, GL_UNSIGNED_BYTE, test);
-	
-	glEnd();
-	/*
-	//glLoadIdentity();
-	//gluLookAt(10, 10, 10, 0, 0, 0, 0, 1, 0);
-
-	// Red side - Bottom
-    glBegin(GL_QUADS);
-		glColor3f( 1.0, 0.0, 0.0 );
-        glVertex3f(-0.5, -0.5, -0.5);
-        glVertex3f(0.5, -0.5, -0.5);
-        glVertex3f(0.5, -0.5, 0.5);
-        glVertex3f(-0.5, -0.5, 0.5);
-		
-	// Green side - Left
-        glColor3f( 0.0, 1.0, 0.0 );
-        glVertex3f(-0.5, 0.5, 0.5);
-        glVertex3f(0.5, 0.5, 0.5);
-        glVertex3f(0.5, -0.5, 0.5);
-        glVertex3f(-0.5, -0.5, 0.5);
-	
-	// Cyan side - Top
-        glColor3f( 0.0, 1.0, 1.0 );
-        glVertex3f(-0.5, 0.5, 0.5);
-        glVertex3f(0.5, 0.5, 0.5);
-        glVertex3f(0.5, 0.5, -0.5);
-        glVertex3f(-0.5, 0.5, -0.5);
-		
-	// Blue side - Right
-        glColor3f( 0.0, 0.0, 1.0 );
-        glVertex3f(-0.5, -0.5, -0.5);
-        glVertex3f(-0.5, 0.5, -0.5);
-        glVertex3f(0.5, 0.5, -0.5);
-        glVertex3f(0.5, -0.5, -0.5);
-	
-	// Purple side - Front
-        glColor3f( 1.0, 0.0, 1.0 );
-        glVertex3f(0.5, 0.5, 0.5);
-        glVertex3f(0.5, 0.5, -0.5);
-        glVertex3f(0.5, -0.5, -0.5);
-        glVertex3f(0.5, -0.5, 0.5);
-	
-	// Yellow side - Back
-        glColor3f( 1.0, 1.0, 0.0 );
-        glVertex3f(-0.5, 0.5, -0.5);
-        glVertex3f(-0.5, 0.5, 0.5);
-        glVertex3f(-0.5, -0.5, 0.5);
-        glVertex3f(-0.5, -0.5, -0.5);
-    glEnd();
-	
-	glRotatef( 14, 1.0, 0.0, 0.0 );
-	glRotatef( 5, 0.0, 1.0, 0.0 );
-	glRotatef( 2, 0.0, 0.0, 1.0 );
- /
-    glFlush();
-	glutSwapBuffers();
-	*/
 }
  
 void loadBackground() {
@@ -160,18 +94,28 @@ void loadBackground() {
 		//printf("tileNum=%02x\n", Memory[bMap + i]);
 		if(address == 0x8800) { // allow for negative numbers
 			getTileAt((offset * (int8_t)tileNum) + address, background[i]);
+			if(tileNum > 0) {
+				//printf("address=%04x, tileNum=%02x\n", (offset * (int8_t)tileNum) + address, tileNum);
+				//printTileData(i);
+			}
 		} else {
 			getTileAt((offset * tileNum) + address, background[i]);
 			if(tileNum > 0) {
-				//printf("address=%04x\n", (offset * tileNum) + address);
-				/*printf("Tile data: ");
-				for(int k=0; k<16; k++) {
-					printf("%02x ", background[i]->data[k]);
-				}
-				printf("\n");*/
+				//printf("address=%04x, tileNum=%02x\n", (offset * tileNum) + address, tileNum);
+				//printTileData(i);
 			}
 		}
 	}
+}
+
+void printTileData(int tileNum) {
+	
+	//printf("address=%04x\n", (offset * tileNum) + address);
+	printf("Tile data: ");
+	for(int k=0; k<16; k++) {
+		printf("%02x ", background[tileNum]->data[k]);
+	}
+	printf("\n");
 }
 
 void setBackgroundPixels() {
@@ -199,8 +143,29 @@ void setBackgroundPixels() {
 			
 			//printf("screenPixels[%04x] = %08x\n", sPixelsIndex, sPixel);
 			screenPixels[sPixelsIndex] = GetColourFor(pixel);
+			switch(pixel) {
+				case 0:
+					pixel = 32; break;
+				case 1:
+					pixel = 46; break;
+				case 2:
+					pixel = 56; break;
+				case 3:
+					pixel = 35; break;
+			}
+			fwrite(&pixel, sizeof(uint8_t), sizeof(uint8_t) * 1, out);
 		}
+		//pixel = (uint8_t)13;
+		//fwrite(&pixel, sizeof(uint8_t), sizeof(uint8_t) * 1, out);
+		pixel = (uint8_t)10;
+		fwrite(&pixel, sizeof(uint8_t), sizeof(uint8_t) * 1, out);
 	}
+	
+	// TEST: Set one random pixel as black each refresh
+    int randomnumber;
+    randomnumber = rand() % (S_HEIGHT * S_HEIGHT);
+	screenPixels[randomnumber] = BLACK;
+	
 	
 }
 

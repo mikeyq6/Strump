@@ -1,3 +1,4 @@
+#include <stdio.h> 
 #include <SDL.h>
 
 #ifndef DRAW_H
@@ -19,5 +20,8 @@ uint32_t screenPixels[NUMPIXELS];
 void drawInit(int argc, char* argv[]);
 void loadBackground();
 void callRefresh();
+void printTileData(int tileNum);
+
+FILE *out;
 
 #endif 

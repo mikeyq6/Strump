@@ -16,7 +16,7 @@ void DEC(uint8_t opcode);
 void INC(uint8_t opcode);
 void JR(uint8_t opcode, uint8_t param1, uint8_t param2, uint8_t *skipPCInc);
 void CALL(uint8_t opcode, uint8_t param1, uint8_t param2);
-void RET_(uint8_t opcode);
+void RET_(uint8_t opcode, uint8_t *skipPCInc);
 void DAA_();
 void RRCA_();
 void RRA_();

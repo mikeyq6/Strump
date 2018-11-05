@@ -10,7 +10,7 @@
 #include "test.h"
 
 #define RUNTESTS
-#define STEPTHROUGH 0
+//#define STEPTHROUGH 0
 //#define DEBUG_TIMER
 
 #ifdef RUNTESTS
@@ -23,6 +23,7 @@ int skipuntil = 0;
 short tempShow = 1;
 uint8_t bdata[BACKGROUNDTILES * 16];
 FILE *fp;
+long long int iCounter = 0;
 #endif
 
 void readInitialProgram();
@@ -33,7 +34,12 @@ uint8_t GetCycles(uint8_t opcode);
 short ShouldPrint();
 void PushPCOntoStack();
 void UpdateGraphics(uint8_t opcode);
+void NewUpdateGraphics(uint8_t opcode);
 uint32_t GetColourForPaletteNumber(uint8_t pNumber);
+uint8_t running = 1;
+uint8_t pause = 0;
+uint8_t shouldRefresh = 0;
+SDL_Event event;
 
 // Internal startup ROM
 uint8_t InternalRom[INTERNAL_ROM_SIZE] = { 0x31,0xFE,0xFF,0xAF,0x21,0xFF,0x9F,0x32,0xCB,0x7C,0x20,0xFB,0x21,0x26,0xFF,0x0E,0x11,0x3E,0x80,0x32,0xE2,0x0C,0x3E,0xF3,0xE2,0x32,0x3E,0x77,0x77,0x3E,0xFC,0xE0,0x47,0x11,0x04,0x01,0x21,0x10,0x80,0x1A,0xCD,0x95,0x00,0xCD,0x96,0x00,0x13,0x7B,0xFE,0x34,0x20,0xF3,0x11,0xD8,0x00,0x06,0x08,0x1A,0x13,0x22,0x23,0x05,0x20,0xF9,0x3E,0x19,0xEA,0x10,0x99,0x21,0x2F,0x99,0x0E,0x0C,0x3D,0x28,0x08,0x32,0x0D,0x20,0xF9,0x2E,0x0F,0x18,0xF3,0x67,0x3E,0x64,0x57,0xE0,0x42,0x3E,0x91,0xE0,0x40,0x04,0x1E,0x02,0x0E,0x0C,0xF0,0x44,0xFE,0x90,0x20,0xFA,0x0D,0x20,0xF7,0x1D,0x20,0xF2,0x0E,0x13,0x24,0x7C,0x1E,0x83,0xFE,0x62,0x28,0x06,0x1E,0xC1,0xFE,0x64,0x20,0x06,0x7B,0xE2,0x0C,0x3E,0x87,0xE2,0xF0,0x42,0x90,0xE0,0x42,0x15,0x20,0xD2,0x05,0x20,0x4F,0x16,0x20,0x18,0xCB,0x4F,0x06,0x04,0xC5,0xCB,0x11,0x17,0xC1,0xCB,0x11,0x17,0x05,0x20,0xF5,0x22,0x23,0x22,0x23,0xC9,0xCE,0xED,0x66,0x66,0xCC,0x0D,0x00,0x0B,0x03,0x73,0x00,0x83,0x00,0x0C,0x00,0x0D,0x00,0x08,0x11,0x1F,0x88,0x89,0x00,0x0E,0xDC,0xCC,0x6E,0xE6,0xDD,0xDD,0xD9,0x99,0xBB,0xBB,0x67,0x63,0x6E,0x0E,0xEC,0xCC,0xDD,0xDC,0x99,0x9F,0xBB,0xB9,0x33,0x3E,0x3C,0x42,0xB9,0xA5,0xB9,0xA5,0x42,0x3C,0x21,0x04,0x01,0x11,0xA8,0x00,0x1A,0x13,0xBE,0x20,0xFE,0x23,0x7D,0xFE,0x34,0x20,0xF5,0x06,0x19,0x78,0x86,0x23,0x05,0x20,0xFB,0x86,0x20,0xFE,0x3E,0x01,0xE0,0x50 };
@@ -52,8 +58,9 @@ void initCPU() {
 	memset(RamBankData, 0, sizeof(RamBankData));
 	memset(InstructionStats, 0, sizeof(InstructionStats));
 	
-#ifdef STEPTHROUGH
 	InitCartridgeInfo();
+	
+#ifdef STEPTHROUGH
 	for(int i=0; i<BACKGROUNDTILES * 16; i++) {
 		bdata[i] = 0;
 	}
@@ -106,6 +113,80 @@ void setDefaults() {
 	WriteMem(STAT, 0x85); // IE
 }
 
+void NewStart() {
+	uint8_t inst;
+	setDefaults();
+	
+	while(running) {
+		while(SDL_PollEvent(&event)) {
+			if(event.type == SDL_QUIT) {
+				running = 0;
+			}
+			if(event.type == SDL_KEYDOWN) {
+				running = 0;				
+			}
+			if(event.type == SDL_MOUSEBUTTONDOWN) {
+				pause = !pause;
+			}
+		}
+		inst = ProcessNextInstruction();
+		if(InterruptsEnabled) {
+			CheckInterrupts();
+		}
+		UpdateTimer(inst);
+		UpdateGraphics(inst);
+		
+		if(shouldRefresh) {
+			callRefresh();
+		}
+	}
+}
+
+uint8_t ProcessNextInstruction() {
+	uint8_t param1 = 0;
+	uint8_t param2 = 0;
+	
+	uint8_t inst = GetNextInstruction();
+	short params = GetParameters(inst, &param1, &param2);
+	
+	if(WillEnableInterrupts) {
+		WillEnableInterrupts = 0;
+		InterruptsEnabled = 1;
+	}
+	if(WillDisableInterrupts) {
+		WillDisableInterrupts = 0;
+		InterruptsEnabled = 0;
+	}
+	
+	if(params == 0) {
+#ifdef STEPTHROUGH
+		if(ShouldPrint()) { printf(CodeToString(inst)); }
+#endif
+		Run(inst, 0, 0);
+	} else if(params == 1) {
+#ifdef STEPTHROUGH
+		if(ShouldPrint()) { 
+			if(inst == CB) {
+				printf(CodeToString(inst), CBCodeToString(param1));
+			} else {
+				printf(CodeToString(inst), param1);
+			}
+		}
+#endif
+		Run(inst, param1, 0);
+	} else if(params == 2) {
+#ifdef STEPTHROUGH
+		if(ShouldPrint()) { printf(CodeToString(inst), param1, param2); }
+#endif
+		Run(inst, param1, param2);
+	}
+	if(ShouldPrint()) { 
+		printf("\n");
+	}
+	
+	return inst;
+}
+
 void Start() {
 	//readInitialProgram();
 	//runInitialProgram();
@@ -117,8 +198,21 @@ void Start() {
 		WriteMem(TAC, 0x07);
 		InterruptsEnabled = 1;
 #endif
+    for(;;) {
 
-	for(;;) {
+	/*while(running) {
+        while(SDL_PollEvent(&event) ) {
+			if (event.type == SDL_QUIT)
+				running = 0;
+			else if (event.type == SDL_KEYDOWN) {
+				if(x == 'q') { 
+					running = 0; 
+					SDL_Log("User just pressed down a key! %04x", iCounter);
+					break; 
+				}				
+			}
+		}*/
+		
 		uint8_t inst = GetNextInstruction();
 		short params = GetParameters(inst, &param1, &param2);
 		if(WillEnableInterrupts) {
@@ -173,6 +267,12 @@ void Start() {
 			skipuntil = 0;
 			char x = _getch();
 			if(x == 'q') { break; }
+			else if(x == 'p') {
+				printf("Break when SP reaches: ");
+				unsigned int input;
+				scanf_s("%x", &input);
+				
+			}
 			else if(x == 's') { 
 				printf("Skip to address: ");
 				unsigned int input;
@@ -291,6 +391,7 @@ void Start() {
 }
 
 void Quit() {
+	SDL_Quit();
 	free(CartInfo);
 }
 
@@ -333,10 +434,9 @@ uint8_t ReadMem(uint16_t location) {
 		return RamBankData[location + (RamBank * 0x2000)];
 	} else if(location >= 0xe000 && location < 0xfe00) { // Allow for the mirrored internal RAM
 		return Memory[location - 0x2000];
-	} else {
-		if(location == 0x7f39) {
-		    printf("Getting value from %04x = %02x\n", DE.de, GetValueAt(DE.de)); 
-		}
+	} else if(location >= 0x4000 && location <= 0x7fff) {
+		return GetValueAt(location);
+	} else {		
 		return Memory[location];
 	}
 	return 0;
@@ -357,7 +457,7 @@ void WriteMem(uint16_t location, uint8_t value) {
 		RomBank = value;
 	} else if(location >= 0x4000 && location < 0x6000) { // ROM/RAM Switching
 		printf("ROM/RAM Switching. RomBanking = %s, Bank=%02x\n", (RomBanking ? "true" : "false"), value);
-		_getch();
+		//_getch();
 		if(CartInfo->controllerType == MBC1 || CartInfo->controllerType == MBC3) {
 			if(RomBanking) {
 				RomBank = value;
@@ -378,10 +478,10 @@ void WriteMem(uint16_t location, uint8_t value) {
 			location -= 0xa000;
 			RamBankData[location + (RamBank * 0x2000)] = value;
 			printf("Writing (%02x) to RAM at address(%04x)\n", value, (location + (RamBank * 0x2000)));
-			_getch();
+			//_getch();
 		} else {
 			printf("Trying to write to RAM but it is not enabled");
-			_getch();
+			//_getch();
 		}
 	} else if(location == ENDSTART) {;
 		Startup = 0;
@@ -510,8 +610,8 @@ void UpdateTimer(uint8_t opcode) {
 }
 
 static void PushPCOntoStack() {
-	Memory[SP] = (uint8_t)(PC >> 8); SP--;
-	Memory[SP] = (uint8_t)(PC & 0xff); SP--;
+	Memory[--SP] = (uint8_t)(PC & 0xff);
+	Memory[--SP] = (uint8_t)(PC >> 8);
 }
  
 // Instructions 
@@ -519,6 +619,9 @@ void Run(uint8_t opcode, uint8_t param1, uint8_t param2) {
 	uint8_t skipPCInc = 0;
 	uint8_t p1, p2;
 	InstructionStats[opcode]++;
+	#ifdef STEPTHROUGH
+	iCounter++;
+	#endif
 	// if(opcode == 0xff) {
 		// printf("PC=%04x", PC);
 		// _getch();
@@ -766,7 +869,7 @@ void Run(uint8_t opcode, uint8_t param1, uint8_t param2) {
 		case RET_C:
 		case RET:
 		case RETI:
-			RET_(opcode); break;
+			RET_(opcode, &skipPCInc); break;
 		case RST_00H:
 		case RST_10H:
 		case RST_20H:
@@ -1112,7 +1215,9 @@ uint8_t GetValueAt(uint16_t address) {
 	uint8_t val = 0;
 	uint32_t nAddress = address;
 	
-	if(address >= 0x4000 && address <= 0x7fff) {
+	if(address >= 0 && address < 0x4000) {
+		return Startup ? InternalRom[address] : Cartridge[address];
+	} else if(address >= 0x4000 && address <= 0x7fff) {
 		if(RomBank == 0x13) {
 			//printf("address=%04x, newAddress=%x\n", address, address + ((RomBank - 1) * 0x4000));
 		}
@@ -1122,11 +1227,18 @@ uint8_t GetValueAt(uint16_t address) {
 		} else {
 			val = Cartridge[address];
 		}
-		if(RomBank == 0x13) {
-			//printf("address=%x, val=%02x\n", address, val);
-		}
+	} else if(address >= 0xa000 && address < 0xc000) {
+		// External (cartridge) RAM
+		
+	} else if(address >= 0xc000 && address < 0xe000) {
+		// Internal Work RAM
+		address -= 0xa000;
+		return RamBankData[address + (RamBank * 0x2000)];
+	} else if(address >= 0xff80 && address < 0xffff) {
+		// High-RAM area
+		return Memory[address];
 	} else {
-		val = Startup ? InternalRom[address] : Cartridge[address];
+		val = Memory[address];
 	}
 	
 	//printf("address=%04x, val=%02x\n", address, val);
@@ -1329,14 +1441,16 @@ uint8_t GetCycles(opcode) {
 
 // LCDC
 void UpdateGraphics(uint8_t opcode) {
-	uint8_t cycles;
-	SetLCDStatus();
 	
+	uint8_t cycles;
+	SetLCDStatus();	
+		
 	if(IsLCDEnabled()) {
 		cycles = GetCycles(opcode);
 		sCounter -= cycles;
 	} else return;
 	
+	//printf("sCounter=%04x\n", sCounter);
 	if(sCounter <= 0) {
 		Memory[LY]++;
 		uint8_t cLine = Memory[LY];
@@ -1353,7 +1467,37 @@ void UpdateGraphics(uint8_t opcode) {
 		}	
 		
 	}
+	//callRefresh();
+}
+void NewUpdateGraphics(uint8_t opcode) {
 	
+	shouldRefresh = 0;
+	uint8_t cycles;
+	SetLCDStatus();	
+		
+	if(IsLCDEnabled()) {
+		cycles = GetCycles(opcode);
+		sCounter -= cycles;
+	} else return;
+	
+	//printf("sCounter=%04x\n", sCounter);
+	if(sCounter <= 0) {
+		Memory[LY]++;
+		uint8_t cLine = Memory[LY];
+		
+		sCounter = 0x1c8;
+		
+		if(cLine == 0x90) {
+			SetInterrupt(I_VBlank);
+		} else if(cLine > 0x99) {
+			Memory[LY] = 0;
+		} else if(cLine == 143) {
+			//printf("cLine=%02x, callRefresh();\n", cLine);
+			shouldRefresh = 1;
+		}	
+		
+	}
+	//callRefresh();
 }
 
 void SetLCDStatus() {
